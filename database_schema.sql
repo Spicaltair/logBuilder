@@ -1,3 +1,16 @@
+<<<<<<< HEAD
+=======
+
+CREATE TABLE Users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY, -- 用户唯一标识
+    username VARCHAR(50) NOT NULL,         -- 用户名
+    email VARCHAR(100) NOT NULL UNIQUE,    -- 邮箱
+    password_hash VARCHAR(255) NOT NULL,   -- 加密后的密码
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 创建时间
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- 更新时间
+);
+
+>>>>>>> d8952c9 (Apply changes from nested directory)
 CREATE TABLE projects (
     project_id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
