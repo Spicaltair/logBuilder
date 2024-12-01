@@ -1,5 +1,7 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+
 
 CREATE TABLE Users (
     user_id INT AUTO_INCREMENT PRIMARY KEY, -- 用户唯一标识
@@ -10,7 +12,10 @@ CREATE TABLE Users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- 更新时间
 );
 
+<<<<<<< HEAD
 >>>>>>> d8952c9 (Apply changes from nested directory)
+=======
+>>>>>>> d8952c985178ef5942548b4b47c588bf2714a8e8
 CREATE TABLE projects (
     project_id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
