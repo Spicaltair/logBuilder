@@ -1,6 +1,7 @@
 import os
 import sys
 from utils.log_creator import create_log_file
+from app.gui import run_gui
 
 def run_main_app():
     """
@@ -11,7 +12,7 @@ def run_main_app():
 
     # 调用时，您可以选择性地传递 filename 参数
     log_directory = "logs"
-    #log_filename = "log1"  # 可以传递自定义文件名
+    
     log_content = "这是第一条日志This is the first log entry.\n"
     
 

@@ -9,6 +9,7 @@ def get_weather_by_location():
         return
     city = location['city']
     weather = get_weather(city)
+    
     if 'error' not in weather:
         print(f"城市: {city}")
         print(f"温度: {weather['temperature']}°C")
@@ -16,6 +17,7 @@ def get_weather_by_location():
         print(f"风向: {weather['wind_direction']}°")
         print(f"湿度: {weather['humidity']}%")
         print(f"天气状况: {weather['weather_condition']}")
+        return(weather)
     else:
         print(weather['error'])
 

@@ -26,4 +26,3 @@ def create_log_file(directory, logs):
             file.write(logs + "\n")
 
     return filepath
-
