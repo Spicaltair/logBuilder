@@ -14,6 +14,15 @@ def get_location():
     else:
         return {'error': f"Error {response.status_code}: {response.reason}"}
 
+def get_city():
+    response = requests.get('https://ipinfo.io/json')
+    if response.status_code == 200:
+        data = response.json()
+        return data.get('city'),
+        
+        
+    else:
+        return {'error': f"Error {response.status_code}: {response.reason}"}
 # 示例调用
 if __name__ == "__main__":
     location = get_location()
