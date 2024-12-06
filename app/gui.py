@@ -138,19 +138,30 @@ entry_weather.insert("1.0", formatted_weather)
 # 任务输入
 label_task = tk.Label(scrollable_frame, text="任务内容:")
 label_task.pack(pady=5)
-entry_task = tk.Text(scrollable_frame, width=50, height=10)
+
+entry_task = tk.Text(scrollable_frame, width=50, height=10)  # 创建 Text 小部件
 entry_task.pack(pady=5)
+
+# 插入默认文字
+entry_task.insert("1.0", "请输入今天的任务")  # "1.0" 表示从第一行第一个字符开始
+
+def clear_default(event):
+    if entry_task.get("1.0", tk.END).strip() == "请输入今天的任务":
+        entry_task.delete("1.0", tk.END)
+
+entry_task.bind("<FocusIn>", clear_default)  # 绑定焦点事件
 
 # 按钮区------------------------------------------------------------------------------------
 # 保存按钮
 btn_save = tk.Button(scrollable_frame,  text="保存日志", command=save_log)
-btn_save.pack(pady=10)
+btn_save.pack(side="left", padx=5)
 # 预览按钮
 btn_preview = tk.Button(scrollable_frame,  text="预览日志", command=preview_log)
-btn_preview.pack(pady=5)
+btn_preview.pack(side="left", padx=5)
 # 获取天气按钮
-btn_get_weather = tk.Button(scrollable_frame,  text="获取天气", command=update_weather_display)
-btn_get_weather.pack(pady=5)
+btn_get_weather = tk.Button(scrollable_frame, text="获取天气", command=update_weather_display)
+btn_get_weather.pack(side="left", padx=5)  # 增加内边距和垂直间距
+
 #-------------------------------------------------------------
 # 启动 GUI
 root.mainloop()
