@@ -1,35 +1,27 @@
 import requests
 
-# 获取地理信息
-def get_location():
+def get_location_data():
+    """
+    获取地理信息并返回字典
+    """
     response = requests.get('https://ipinfo.io/json')
     if response.status_code == 200:
-        data = response.json()
-        return {
-            'city': data.get('city'),
-            'region': data.get('region'),
-            'country': data.get('country'),
-            'loc': data.get('loc')  # 经纬度，格式为 "纬度,经度"
-        }
+        return response.json()
     else:
         return {'error': f"Error {response.status_code}: {response.reason}"}
 
-def get_city():
-    response = requests.get('https://ipinfo.io/json')
-    if response.status_code == 200:
-        data = response.json()
-        return data.get('city'),
-        
-        
-    else:
-        return {'error': f"Error {response.status_code}: {response.reason}"}
+def get_city(location_data):
+    """
+    从地理信息中提取城市
+    """
+    return location_data.get('city', '未知城市')
+
 # 示例调用
 if __name__ == "__main__":
-    location = get_location()
-    if 'error' not in location:
-        print(f"城市: {location['city']}")
-        print(f"地区: {location['region']}")
-        print(f"国家: {location['country']}")
-        print(f"经纬度: {location['loc']}")
+    location_data = get_location_data()
+    if 'error' not in location_data:
+        city = get_city(location_data)
+        print(f"城市: {city}")
     else:
-        print(location['error'])
+        print(location_data['error'])
+
