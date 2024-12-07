@@ -2,10 +2,14 @@ import os
 import sys
 from utils.log_creator import create_log_file
 from app.gui import run_gui
+from scripts.api_utils import fetch_city_list, get_weather
+from utils.history_manager import save_history, load_history
 
 def run_main_app():
     """
-    主应用逻辑，处理施工日志功能。
+    主应用核心业务逻辑，
+    处理施工日志功能，
+    加载用户信息，天气管理
     """
     print("欢迎使用乐标日志 LogBuilder！")
    # print(create_log_file)
@@ -20,5 +24,10 @@ def run_main_app():
     log_path = create_log_file(directory=log_directory,logs=log_content)
     print(f"日志文件已创建: {log_path}")
 
+    # 加载用户历史选择
+    last_city = load_history()
+    print(f"加载历史城市: {last_city}")
+
+ 
     # 后续扩展功能
     print("其他功能开发中...")

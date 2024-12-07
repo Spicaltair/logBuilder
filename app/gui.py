@@ -2,6 +2,8 @@ import sys
 import os
 import requests
 import tkinter as tk
+
+from tkinter import ttk  # 导入 ttk 模块
 from tkinter import messagebox
 from datetime import datetime
 from ttkthemes import ThemedTk
@@ -13,9 +15,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 's
 
 from log_creator import create_log_file
 from get_location import get_city
+from api_utils import get_dynamic_city_list, get_weather_for_city, get_location_data
 
 
 
+# 函数区》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》
 def save_log():
     """
     保存日志内容到文件或数据库
@@ -79,115 +83,6 @@ def format_weather_data(weather_data):
             formatted += f"{key}: {value}\n"
     return formatted
 
-
-
-def update_weather_display():
-    """
-    根据用户输入的城市更新天气信息
-    """
-    city = entry_city.get().strip()
-    if not city:
-        messagebox.showwarning("警告", "请输入城市名称！")
-        return
-
-    weather = get_weather(city)  # 获取天气
-    if 'error' in weather:
-        weather_output.delete("1.0", tk.END)
-        weather_output.insert("1.0", weather['error'])
-    else:
-        result = (
-            f"城市: {city}\n"
-            f"天气: {weather['description']}\n"
-            f"温度: {weather['temperature']}°C\n"
-            f"湿度: {weather['humidity']}%\n"
-            f"风速: {weather['wind_speed']} m/s\n"
-        )
-        weather_output.delete("1.0", tk.END)
-        weather_output.insert("1.0", result)
-
-    
-# 创建主窗口
-root = tk.Tk()
-root.title("LogBuilder！！ ")
-root.geometry("700x500")
-root.config(bg="#e6f0ea")  # 设置背景颜色-深绿
-
-#root = ThemedTk(theme="equilux")
-# 添加一个标签
-label = tk.Label(root, text="欢迎使用施工日志工具乐构者", bg="#27362d", fg="#e6f0ea", font=("Arial", 14))
-label.pack(pady=15)
-
-# 创建画布和滚动
-canvas = tk.Canvas(root)
-scrollbar = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
-scrollable_frame = tk.Frame(canvas)
-
-# 配置滚动条
-scrollable_frame.bind(
-    "<Configure>",
-    lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-)
-canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-canvas.configure(yscrollcommand=scrollbar.set)
-
-scrollbar.pack(side="right", fill="y")
-canvas.pack(side="left", fill="both", expand=True)
-
-# 自动获取当前日期、城市和天气
-
-def select_city():
-    """
-    自动选择当前城市
-    """
-    location_data = get_location_data()
-    if 'error' in location_data:
-        return "未知城市"
-    return get_city(location_data)
-    
-    
-def get_weather_by_location():
-    """
-    根据当前 IP 获取位置并获取天气
-    """
-    location_data = get_location_data()
-    city = get_city(location_data)
-    return get_weather(city)
-    
-def get_location_data():
-    """
-    获取地理信息并返回字典
-    """
-    response = requests.get('https://ipinfo.io/json')
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return {'error': f"Error {response.status_code}: {response.reason}"}
-
-def get_city(location_data):
-    """
-    从地理信息中提取城市
-    """
-    return location_data.get('city', '未知城市')
-
-def get_weather(city):
-    """
-    根据城市名称获取天气信息
-    """
-    api_key = "a50b80b50d70a0d26b0f43b6e2f03e4b"  # 替换为实际 API 密钥
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
-
-    response = requests.get(url)
-    if response.status_code == 200:
-        weather_data = response.json()
-        return {
-            'temperature': weather_data['main']['temp'],
-            'description': weather_data['weather'][0]['description'],
-            'humidity': weather_data['main']['humidity'],
-            'wind_speed': weather_data['wind']['speed']
-        }
-    else:
-        return {'error': f"Error {response.status_code}: {response.reason}'"}
-
 def update_city_entry():
     """
     自动填入当前检测到的城市
@@ -200,7 +95,8 @@ def update_city_entry():
 
     entry_city.delete(0, tk.END)
     entry_city.insert(0, default_city)
-
+    
+    
 def fetch_weather():
     """
     获取天气信息并显示
@@ -226,11 +122,103 @@ def fetch_weather():
         weather_output.delete("1.0", tk.END)
         weather_output.insert("1.0", result)
 
-current_date = datetime.now().strftime("%Y-%m-%d")
-current_city = select_city()
-current_weather = get_weather_by_location()  # 使用 scripts/get_weather.py 中的函数
+def update_weather_display():
+    """
+    根据用户输入的城市更新天气信息
+    """
+    city = entry_city.get().strip()
+    if not city:
+        messagebox.showwarning("警告", "请输入城市名称！")
+        return
+
+    weather = get_weather(city)  # 获取天气
+    if 'error' in weather:
+        weather_output.delete("1.0", tk.END)
+        weather_output.insert("1.0", weather['error'])
+    else:
+        result = (
+            f"城市: {city}\n"
+            f"天气: {weather['description']}\n"
+            f"温度: {weather['temperature']}°C\n"
+            f"湿度: {weather['humidity']}%\n"
+            f"风速: {weather['wind_speed']} m/s\n"
+        )
+        weather_output.delete("1.0", tk.END)
+        weather_output.insert("1.0", result)
+
+
+#初始化
+def initialize_defaults():
+    """
+    自动填入默认的城市和天气信息
+    """
+    # 自动填入城市
+    default_city = select_city()
+    entry_city.insert(0, default_city)
+
+    # 自动填入天气
+    weather = get_weather_by_location()
+    if 'error' not in weather:
+        result = (
+            f"天气: {weather['description']}\n"
+            f"温度: {weather['temperature']}°C\n"
+            f"湿度: {weather['humidity']}%\n"
+            f"风速: {weather['wind_speed']} m/s\n"
+        )
+        weather_output.insert("1.0", result)
+    else:
+        weather_output.insert("1.0", weather['error'])
+
+#函数区《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《
+    
+
+#窗口布置区》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》
+# 创建主窗口
+root = tk.Tk()
+root.title("LogBuilder！！ ")
+root.geometry("700x500")
+root.config(bg="#e6f0ea")  # 设置背景颜色-深绿
+
+# 添加一个标签
+label = tk.Label(root, text="欢迎使用施工日志工具乐构者", bg="#27362d", fg="#e6f0ea", font=("Arial", 14))
+label.pack(pady=15)
+
+# 创建画布和滚动
+canvas = tk.Canvas(root)
+scrollbar = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
+scrollable_frame = tk.Frame(canvas)
+
+# 配置滚动条
+scrollable_frame.bind(
+    "<Configure>",
+    lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+)
+canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+canvas.configure(yscrollcommand=scrollbar.set)
+
+scrollbar.pack(side="right", fill="y")
+canvas.pack(side="left", fill="both", expand=True)
+
+#窗口布置区《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《
+
+
+# 自动获取当前日期、城市和天气
+# 城市选择标签
+
+label_city = tk.Label(root, text="选择城市:", bg="#e6f0ea", fg="#27362d")
+label_city.pack(pady=5)
+
+# 获取动态城市列表
+cities = get_dynamic_city_list()
+
+# 创建城市下拉菜单
+city_var = tk.StringVar()
+combobox_city = ttk.Combobox(root, textvariable=city_var, values=cities, state="readonly", width=30)
+combobox_city.set(cities[0])  # 默认选择第一个城市
+combobox_city.pack(pady=10)
 
 # 日期输入
+current_date = datetime.now().strftime("%Y-%m-%d")
 label_date = tk.Label(scrollable_frame, bg="#27362d", fg="#e6f0ea", text="日期（自动获取）:")
 label_date.pack(pady=5)
 entry_date = tk.Entry(scrollable_frame,  width=30)
@@ -273,37 +261,16 @@ def clear_default(event):
 
 entry_task.bind("<FocusIn>", clear_default)  # 绑定焦点事件
 
-# 按钮区------------------------------------------------------------------------------------
+# 按钮区》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》
 # 保存按钮
 btn_save = tk.Button(scrollable_frame, bg="#007BFF", fg="#ffffff", text="保存日志", command=save_log)
 btn_save.pack(side="left", padx=5)
 # 预览按钮
 btn_preview = tk.Button(scrollable_frame, bg="#007BFF", fg="#ffffff", text="预览日志", command=preview_log)
 btn_preview.pack(side="left", padx=5)
+# 按钮区《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《
 
 
-#-------------------------------------------------------------
-#初始化
-def initialize_defaults():
-    """
-    自动填入默认的城市和天气信息
-    """
-    # 自动填入城市
-    default_city = select_city()
-    entry_city.insert(0, default_city)
-
-    # 自动填入天气
-    weather = get_weather_by_location()
-    if 'error' not in weather:
-        result = (
-            f"天气: {weather['description']}\n"
-            f"温度: {weather['temperature']}°C\n"
-            f"湿度: {weather['humidity']}%\n"
-            f"风速: {weather['wind_speed']} m/s\n"
-        )
-        weather_output.insert("1.0", result)
-    else:
-        weather_output.insert("1.0", weather['error'])
 
 # 启动 GUI
 root.mainloop()
