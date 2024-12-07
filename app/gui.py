@@ -109,7 +109,7 @@ def update_weather_display():
 # 创建主窗口
 root = tk.Tk()
 root.title("LogBuilder！！ ")
-root.geometry("400x500")
+root.geometry("700x500")
 root.config(bg="#e6f0ea")  # 设置背景颜色-深绿
 
 #root = ThemedTk(theme="equilux")
@@ -134,6 +134,7 @@ scrollbar.pack(side="right", fill="y")
 canvas.pack(side="left", fill="both", expand=True)
 
 # 自动获取当前日期、城市和天气
+
 def select_city():
     """
     自动选择当前城市
@@ -224,6 +225,7 @@ def fetch_weather():
         )
         weather_output.delete("1.0", tk.END)
         weather_output.insert("1.0", result)
+
 current_date = datetime.now().strftime("%Y-%m-%d")
 current_city = select_city()
 current_weather = get_weather_by_location()  # 使用 scripts/get_weather.py 中的函数
@@ -235,16 +237,6 @@ entry_date = tk.Entry(scrollable_frame,  width=30)
 entry_date.insert(0, current_date)  # 自动填入当前日期
 entry_date.pack(pady=5)
 
-
-
-
-
-
-# 创建 GUI 主窗口
-
-root.title("天气获取工具")
-root.geometry("400x300")
-root.config(bg="#27362d")
 
 # 城市输入部分
 label_city = tk.Label(root, bg="#27362d", fg="#e6f0ea", text="输入城市:")
@@ -283,15 +275,35 @@ entry_task.bind("<FocusIn>", clear_default)  # 绑定焦点事件
 
 # 按钮区------------------------------------------------------------------------------------
 # 保存按钮
-btn_save = tk.Button(scrollable_frame, bg="#27362d", fg="#e6f0ea", text="保存日志", command=save_log)
+btn_save = tk.Button(scrollable_frame, bg="#007BFF", fg="#ffffff", text="保存日志", command=save_log)
 btn_save.pack(side="left", padx=5)
 # 预览按钮
-btn_preview = tk.Button(scrollable_frame, bg="#27362d", fg="#e6f0ea", text="预览日志", command=preview_log)
+btn_preview = tk.Button(scrollable_frame, bg="#007BFF", fg="#ffffff", text="预览日志", command=preview_log)
 btn_preview.pack(side="left", padx=5)
-# 获取天气按钮
-btn_get_weather = tk.Button(scrollable_frame,bg="#27362d", fg="#e6f0ea", text="获取天气", command=update_weather_display)
-btn_get_weather.pack(side="left", padx=5)  # 增加内边距和垂直间距
+
 
 #-------------------------------------------------------------
+#初始化
+def initialize_defaults():
+    """
+    自动填入默认的城市和天气信息
+    """
+    # 自动填入城市
+    default_city = select_city()
+    entry_city.insert(0, default_city)
+
+    # 自动填入天气
+    weather = get_weather_by_location()
+    if 'error' not in weather:
+        result = (
+            f"天气: {weather['description']}\n"
+            f"温度: {weather['temperature']}°C\n"
+            f"湿度: {weather['humidity']}%\n"
+            f"风速: {weather['wind_speed']} m/s\n"
+        )
+        weather_output.insert("1.0", result)
+    else:
+        weather_output.insert("1.0", weather['error'])
+
 # 启动 GUI
 root.mainloop()
