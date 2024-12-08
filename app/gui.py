@@ -1,12 +1,10 @@
 import sys
 import os
-import requests
 import tkinter as tk
 
 from tkinter import ttk  # 导入 ttk 模块
 from tkinter import messagebox
 from datetime import datetime
-from ttkthemes import ThemedTk
 
 
 # 添加 scripts utils 目录到模块搜索路径
@@ -15,7 +13,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 's
 
 from log_creator import create_log_file
 from get_location import get_city
-from api_utils import get_dynamic_city_list, get_weather_for_city, get_location_data
+
+from api_utils import get_dynamic_city_list, get_weather, get_location_data
 
 
 
@@ -103,14 +102,14 @@ def fetch_weather():
     """
     city = entry_city.get().strip()
     if not city:
-        weather_output.delete("1.0", tk.END)
-        weather_output.insert("1.0", "请输入有效的城市名称！")
+        entry_weather.delete("1.0", tk.END)
+        entry_weather.insert("1.0", "请输入有效的城市名称！")
         return
 
     weather = get_weather(city)
     if 'error' in weather:
-        weather_output.delete("1.0", tk.END)
-        weather_output.insert("1.0", weather['error'])
+        entry_weather.delete("1.0", tk.END)
+        entry_weather.insert("1.0", weather['error'])
     else:
         result = (
             f"城市: {city}\n"
@@ -119,8 +118,8 @@ def fetch_weather():
             f"湿度: {weather['humidity']}%\n"
             f"风速: {weather['wind_speed']} m/s\n"
         )
-        weather_output.delete("1.0", tk.END)
-        weather_output.insert("1.0", result)
+        entry_weather.delete("1.0", tk.END)
+        entry_weather.insert("1.0", result)
 
 def update_weather_display():
     """
@@ -133,8 +132,8 @@ def update_weather_display():
 
     weather = get_weather(city)  # 获取天气
     if 'error' in weather:
-        weather_output.delete("1.0", tk.END)
-        weather_output.insert("1.0", weather['error'])
+        entry_weather.delete("1.0", tk.END)
+        entry_weather.insert("1.0", weather['error'])
     else:
         result = (
             f"城市: {city}\n"
@@ -143,8 +142,8 @@ def update_weather_display():
             f"湿度: {weather['humidity']}%\n"
             f"风速: {weather['wind_speed']} m/s\n"
         )
-        weather_output.delete("1.0", tk.END)
-        weather_output.insert("1.0", result)
+        entry_weather.delete("1.0", tk.END)
+        entry_weather.insert("1.0", result)
 
 
 #初始化
@@ -165,9 +164,9 @@ def initialize_defaults():
             f"湿度: {weather['humidity']}%\n"
             f"风速: {weather['wind_speed']} m/s\n"
         )
-        weather_output.insert("1.0", result)
+        entry_weather.insert("1.0", result)
     else:
-        weather_output.insert("1.0", weather['error'])
+        entry_weather.insert("1.0", weather['error'])
 
 #函数区《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《
     
@@ -203,20 +202,6 @@ canvas.pack(side="left", fill="both", expand=True)
 
 
 # 自动获取当前日期、城市和天气
-# 城市选择标签
-
-label_city = tk.Label(root, text="选择城市:", bg="#e6f0ea", fg="#27362d")
-label_city.pack(pady=5)
-
-# 获取动态城市列表
-cities = get_dynamic_city_list()
-
-# 创建城市下拉菜单
-city_var = tk.StringVar()
-combobox_city = ttk.Combobox(root, textvariable=city_var, values=cities, state="readonly", width=30)
-combobox_city.set(cities[0])  # 默认选择第一个城市
-combobox_city.pack(pady=10)
-
 # 日期输入
 current_date = datetime.now().strftime("%Y-%m-%d")
 label_date = tk.Label(scrollable_frame, bg="#27362d", fg="#e6f0ea", text="日期（自动获取）:")
@@ -225,22 +210,40 @@ entry_date = tk.Entry(scrollable_frame,  width=30)
 entry_date.insert(0, current_date)  # 自动填入当前日期
 entry_date.pack(pady=5)
 
-
-# 城市输入部分
-label_city = tk.Label(root, bg="#27362d", fg="#e6f0ea", text="输入城市:")
+# 城市选择或输入
+label_city = tk.Label(root, text="选择或输入城市:", bg="#27362d", fg="#e6f0ea")
 label_city.pack(pady=5)
-entry_city = tk.Entry(root, width=30)
-entry_city.pack(pady=5)
 
+# 获取动态城市列表
+cities = get_dynamic_city_list()  # 动态城市列表函数
+
+# 创建城市选择和输入框
+entry_city = ttk.Combobox(root, values=cities, state="normal", width=30)  # 可输入和选择
+entry_city.set(cities[0])  # 默认选择第一个城市
+entry_city.pack(pady=10)
+
+# 自动检测城市按钮
 btn_update_city = tk.Button(root, text="自动检测城市", bg="#007BFF", fg="#ffffff", command=update_city_entry)
 btn_update_city.pack(pady=5)
+
+# 获取当前选中或输入的城市
+def get_selected_city():
+    city = entry_city.get().strip()
+    if not city:
+        messagebox.showwarning("警告", "请输入或选择一个城市！")
+    return city
+
+# 自动检测城市逻辑
+def update_city_entry():
+    detected_city = "自动检测到的城市"  # 替换为自动检测逻辑
+    entry_city.set(detected_city)
 
 # 天气显示部分
 btn_fetch_weather = tk.Button(root, text="获取天气", bg="#007BFF", fg="#ffffff", command=fetch_weather)
 btn_fetch_weather.pack(pady=5)
 
-weather_output = tk.Text(root, width=40, height=10, wrap="word", bg="#ffffff", fg="#000000")
-weather_output.pack(pady=5)
+entry_weather = tk.Text(root, width=40, height=10, wrap="word", bg="#ffffff", fg="#000000")
+entry_weather.pack(pady=5)
 
 # 初始化时自动填入城市
 update_city_entry()

@@ -1,9 +1,8 @@
 import os
 import sys
 from utils.log_creator import create_log_file
-from app.gui import run_gui
-from scripts.api_utils import fetch_city_list, get_weather
-from utils.history_manager import save_history, load_history
+
+from utils.history_manager import load_history
 
 def run_main_app():
     """

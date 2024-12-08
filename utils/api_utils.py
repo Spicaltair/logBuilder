@@ -2,7 +2,7 @@ import requests
 
 
 
-API_KEY = "a50b80b50d70a0d26b0f43b6e2f03e4b"  # 替换为实际的 API 密钥
+api_key = "a50b80b50d70a0d26b0f43b6e2f03e4b"  # 替换为实际的 API 密钥
 
 def fetch_city_list():
     """
@@ -16,7 +16,7 @@ def fetch_city_list():
     except Exception as e:
         raise RuntimeError(f"无法获取城市列表: {e}")
 
-def get_weather(city, api_key):
+def get_weather(city):
     """
     根据城市名称获取天气信息
     """
