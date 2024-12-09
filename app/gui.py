@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import ttk  # 导入 ttk 模块
 from tkinter import messagebox
 from datetime import datetime
+from tkcalendar import DateEntry  # 导入 DateEntry 控件
 
 
 # 添加 scripts utils 目录到模块搜索路径
@@ -173,19 +174,32 @@ def initialize_defaults():
 
 #窗口布置区》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》
 # 创建主窗口
+
+bg_color = "#CFDEE6"  # 主背景颜色（灰白）
+bg_label_color = "#234406" # 主背景颜色（深绿）
+bg_button_color = "#007BFF" #按钮背景颜色（天蓝）
+
+bg_color_test = "#CB7A00"  # 主背景颜色（深绿）
+
+fg_color_white="#e6f0ea" # 前景（白色）
+fg_color_black="#ffffff" #前景（黑色）
+
 root = tk.Tk()
 root.title("LogBuilder！！ ")
-root.geometry("700x500")
-root.config(bg="#e6f0ea")  # 设置背景颜色-深绿
+root.geometry("400x500")
+root.config(bg=bg_color)  # 设置背景颜色-深绿
 
 # 添加一个标签
-label = tk.Label(root, text="欢迎使用施工日志工具乐构者", bg="#27362d", fg="#e6f0ea", font=("Arial", 14))
+label = tk.Label(root, text="欢迎使用施工日志工具乐构者", bg=bg_label_color, fg="#e6f0ea", font=("Arial", 16))
 label.pack(pady=15)
 
+
+#窗口布置区《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《
+#画布和滚动条配置--------------------------------------------------------
 # 创建画布和滚动
-canvas = tk.Canvas(root)
+canvas = tk.Canvas(root, bg=bg_color)
 scrollbar = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
-scrollable_frame = tk.Frame(canvas)
+scrollable_frame = tk.Frame(canvas, bg=bg_color)
 
 # 配置滚动条
 scrollable_frame.bind(
@@ -197,33 +211,46 @@ canvas.configure(yscrollcommand=scrollbar.set)
 
 scrollbar.pack(side="right", fill="y")
 canvas.pack(side="left", fill="both", expand=True)
-
-#窗口布置区《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《
-
+#-------------------------------------------------------------------------------
 
 # 自动获取当前日期、城市和天气
 # 日期输入
 current_date = datetime.now().strftime("%Y-%m-%d")
-label_date = tk.Label(scrollable_frame, bg="#27362d", fg="#e6f0ea", text="日期（自动获取）:")
+# 日期区
+frame_date = tk.Frame(scrollable_frame, bg=bg_color, pady=10)
+frame_date.pack(fill="x")
+
+label_date = tk.Label(frame_date, bg=bg_label_color, fg="#e6f0ea", text="日期（自动获取）:")
 label_date.pack(pady=5)
-entry_date = tk.Entry(scrollable_frame,  width=30)
-entry_date.insert(0, current_date)  # 自动填入当前日期
+
+frame_date = tk.Frame(scrollable_frame, bg=bg_color, pady=10)
+frame_date.pack(fill="x")
+
+label_date = tk.Label(frame_date, bg=bg_label_color, fg="#e6f0ea", text="选择日期:")
+label_date.pack(pady=5)
+
+# 使用 DateEntry 控件
+entry_date = DateEntry(frame_date, width=20, date_pattern="yyyy-mm-dd", background='darkblue', foreground='white', borderwidth=2)
 entry_date.pack(pady=5)
 
-# 城市选择或输入
-label_city = tk.Label(root, text="选择或输入城市:", bg="#27362d", fg="#e6f0ea")
+
+# 城市区
+frame_city = tk.Frame(scrollable_frame, bg=bg_color, pady=10)
+frame_city.pack(fill="x")
+
+label_city = tk.Label(frame_city, text="选择或输入城市:", bg=bg_label_color, fg="#e6f0ea")
 label_city.pack(pady=5)
 
 # 获取动态城市列表
 cities = get_dynamic_city_list()  # 动态城市列表函数
 
 # 创建城市选择和输入框
-entry_city = ttk.Combobox(root, values=cities, state="normal", width=30)  # 可输入和选择
+entry_city = ttk.Combobox(frame_city, values=cities, state="normal", width=30)  # 可输入和选择
 entry_city.set(cities[0])  # 默认选择第一个城市
 entry_city.pack(pady=10)
 
 # 自动检测城市按钮
-btn_update_city = tk.Button(root, text="自动检测城市", bg="#007BFF", fg="#ffffff", command=update_city_entry)
+btn_update_city = tk.Button(frame_city, text="自动检测城市", bg=bg_button_color, fg=fg_color_black, command=update_city_entry)
 btn_update_city.pack(pady=5)
 
 # 获取当前选中或输入的城市
@@ -238,22 +265,38 @@ def update_city_entry():
     detected_city = "自动检测到的城市"  # 替换为自动检测逻辑
     entry_city.set(detected_city)
 
-# 天气显示部分
-btn_fetch_weather = tk.Button(root, text="获取天气", bg="#007BFF", fg="#ffffff", command=fetch_weather)
-btn_fetch_weather.pack(pady=5)
+# 天气区
+frame_weather = tk.Frame(scrollable_frame, bg=bg_color, pady=10)
+frame_weather.pack(fill="x")
 
-entry_weather = tk.Text(root, width=40, height=10, wrap="word", bg="#ffffff", fg="#000000")
-entry_weather.pack(pady=5)
+label_weather = tk.Label(frame_weather, bg=bg_label_color, fg="#e6f0ea", text="天气信息:")
+label_weather.pack(pady=5)
+
+entry_weather = tk.Text(frame_weather, width=50, height=10, bg="#ffffff", fg="#000000")
+entry_weather.pack()
+
+btn_fetch_weather = tk.Button(frame_weather, text="获取天气", bg=bg_button_color, fg=fg_color_white, command=fetch_weather)
+btn_fetch_weather.pack(pady=5)
 
 # 初始化时自动填入城市
 update_city_entry()
 
-# 任务输入
-label_task = tk.Label(scrollable_frame, bg="#27362d", fg="#e6f0ea", text="任务内容:")
-label_task.pack(pady=5)
+# 任务区
+frame_task = tk.Frame(scrollable_frame, bg=bg_color, pady=10)
+frame_task.pack(fill="x")
 
-entry_task = tk.Text(scrollable_frame, width=50, height=10)  # 创建 Text 小部件
-entry_task.pack(pady=5)
+label_task_title = tk.Label(frame_task, text="任务", bg=bg_label_color, fg=fg_color_white)
+label_task_title.pack()
+
+entry_task = tk.Text(frame_task, width=50, height=5, bg="#ffffff", fg=fg_color_black)
+entry_task.pack()
+
+# 保存按钮
+btn_save = tk.Button(frame_task, bg=bg_button_color, fg=fg_color_white, text="保存日志", command=save_log)
+btn_save.pack(side="bottom", padx=5)
+# 预览按钮
+btn_preview = tk.Button(frame_task, bg=bg_button_color, fg=fg_color_white, text="预览日志", command=preview_log)
+btn_preview.pack(side="bottom", padx=5)
 
 # 插入默认文字
 entry_task.insert("1.0", "请输入今天的任务")  # "1.0" 表示从第一行第一个字符开始
@@ -262,16 +305,9 @@ def clear_default(event):
     if entry_task.get("1.0", tk.END).strip() == "请输入今天的任务":
         entry_task.delete("1.0", tk.END)
 
+
 entry_task.bind("<FocusIn>", clear_default)  # 绑定焦点事件
 
-# 按钮区》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》
-# 保存按钮
-btn_save = tk.Button(scrollable_frame, bg="#007BFF", fg="#ffffff", text="保存日志", command=save_log)
-btn_save.pack(side="left", padx=5)
-# 预览按钮
-btn_preview = tk.Button(scrollable_frame, bg="#007BFF", fg="#ffffff", text="预览日志", command=preview_log)
-btn_preview.pack(side="left", padx=5)
-# 按钮区《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《
 
 
 
