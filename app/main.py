@@ -4,6 +4,8 @@ from utils.log_creator import create_log_file
 
 from utils.history_manager import load_history
 
+
+
 def run_main_app():
     """
     主应用核心业务逻辑，

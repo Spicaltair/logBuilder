@@ -4,6 +4,7 @@ import tkinter as tk
 
 from tkinter import ttk  # 导入 ttk 模块
 from tkinter import messagebox
+from tkinter import filedialog
 from datetime import datetime
 from tkcalendar import DateEntry  # 导入 DateEntry 控件
 
@@ -35,9 +36,17 @@ def save_log():
         return
     
     log_content = f"日期: {date}\n城市：{city}\n任务: {task}\n天气: {weather}\n"
-    log_path = create_log_file(directory="logs", logs=log_content)
+    # 用户选择保存路径
+    file_path = filedialog.asksaveasfilename(
+        defaultextension=".txt",
+        filetypes=[("Text files", "*.txt"), ("CSV files", "*.csv"), ("JSON files", "*.json")],
+    )
     
-    messagebox.showinfo("成功", f"日志已保存到: {log_path}")
+    if file_path:
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write(log_content)
+        messagebox.showinfo("成功", f"日志已保存到: {file_path}")
+   
     entry_task.delete("1.0", tk.END)
 
 # 预览函数定义
@@ -211,6 +220,11 @@ canvas.configure(yscrollcommand=scrollbar.set)
 
 scrollbar.pack(side="right", fill="y")
 canvas.pack(side="left", fill="both", expand=True)
+# 鼠标滚轮支持
+def _on_mouse_wheel(event):
+    canvas.yview_scroll(-1 * (event.delta // 120), "units")
+
+canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
 #-------------------------------------------------------------------------------
 
 # 自动获取当前日期、城市和天气
