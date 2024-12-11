@@ -18,35 +18,48 @@ from get_location import get_city
 
 from api_utils import get_dynamic_city_list, get_weather, get_location_data
 
+from translate import Translator
 
 
 # 函数区》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》
+
+def translate_city_third_party(city_name):
+    translator = Translator(to_lang="zh")
+    translation = translator.translate(city_name)
+    return translation
+
+weekday_mapping = {
+    "Monday": "星期一",
+    "Tuesday": "星期二",
+    "Wednesday": "星期三",
+    "Thursday": "星期四",
+    "Friday": "星期五",
+    "Saturday": "星期六",
+    "Sunday": "星期日"
+}
+
+
+
+
 def save_log():
     """
     保存日志内容到文件或数据库
     """
-    date = entry_date.get()
+    date = entry_date.get_date().strftime("%Y-%m-%d")  # 获取选中的日期
+    weekday = entry_date.get_date().strftime("%A")     # 获取选中的星期
     city = entry_city.get()
     task = entry_task.get("1.0", tk.END).strip()
-    weather = entry_weather.get("1.0", tk.END).strip()  # 获取多行文本内容并去除多余的空格
+    weather = entry_weather.get("1.0", tk.END).strip()
+    weekday_chinese = weekday_mapping[weekday]
 
-    
     if not date or not task:
         messagebox.showerror("错误", "日期和任务内容不能为空！")
         return
-    
-    log_content = f"日期: {date}\n城市：{city}\n任务: {task}\n天气: {weather}\n"
-    # 用户选择保存路径
-    file_path = filedialog.asksaveasfilename(
-        defaultextension=".txt",
-        filetypes=[("Text files", "*.txt"), ("CSV files", "*.csv"), ("JSON files", "*.json")],
-    )
-    
-    if file_path:
-        with open(file_path, "w", encoding="utf-8") as file:
-            file.write(log_content)
-        messagebox.showinfo("成功", f"日志已保存到: {file_path}")
-   
+
+    log_content = f"日期: {date}\n星期: {weekday_chinese}\n城市: {city}\n任务: {task}\n天气: {weather}\n"
+    log_path = create_log_file(directory="logs", logs=log_content)
+
+    messagebox.showinfo("成功", f"日志已保存到: {log_path}")
     entry_task.delete("1.0", tk.END)
 
 # 预览函数定义
@@ -55,15 +68,17 @@ def preview_log():
     显示日志预览窗口
     """
     date = entry_date.get()
+    weekday = entry_date.get_date().strftime("%A") 
     city = entry_city.get()
     task = entry_task.get("1.0", tk.END).strip()
     weather = entry_weather.get("1.0", tk.END).strip()
+    weekday_chinese = weekday_mapping[weekday]
 
     # 创建新窗口显示内容
     preview_window = tk.Toplevel(root)
     preview_window.title("日志预览")
 
-    preview_content = f"日期: {date}\n城市：{city}\n任务: {task}\n天气: {weather}"
+    preview_content = f"日期: {date}\n星期: {weekday_chinese}\n城市: {city}\n任务: {task}\n天气: {weather}\n"
     label_preview = tk.Label(preview_window, text=preview_content, justify="left")
     label_preview.pack(padx=10, pady=10)
 
@@ -228,24 +243,34 @@ canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
 #-------------------------------------------------------------------------------
 
 # 自动获取当前日期、城市和天气
-# 日期输入
+# 获取当前日期和星期
 current_date = datetime.now().strftime("%Y-%m-%d")
+current_weekday = datetime.now().strftime("%A")  # 获取英文星期几
+
 # 日期区
 frame_date = tk.Frame(scrollable_frame, bg=bg_color, pady=10)
 frame_date.pack(fill="x")
 
-label_date = tk.Label(frame_date, bg=bg_label_color, fg="#e6f0ea", text="日期（自动获取）:")
+# 日期标签
+label_date = tk.Label(frame_date, text="日期（自动获取）:", bg=bg_label_color, fg="#e6f0ea")
 label_date.pack(pady=5)
 
-frame_date = tk.Frame(scrollable_frame, bg=bg_color, pady=10)
-frame_date.pack(fill="x")
 
-label_date = tk.Label(frame_date, bg=bg_label_color, fg="#e6f0ea", text="选择日期:")
-label_date.pack(pady=5)
+def update_weekday(*args):
+    """
+    更新星期几显示
+    """
+    selected_date = entry_date.get_date()  # 获取选定的日期
+    weekday = selected_date.strftime("%A")
+    label_weekday.config(text=f"星期: {weekday}")
 
-# 使用 DateEntry 控件
-entry_date = DateEntry(frame_date, width=20, date_pattern="yyyy-mm-dd", background='darkblue', foreground='white', borderwidth=2)
+entry_date = DateEntry(frame_date, width=20, background='darkblue', foreground='white', borderwidth=2)
 entry_date.pack(pady=5)
+entry_date.bind("<<DateEntrySelected>>", update_weekday)
+
+# 星期显示标签
+label_weekday = tk.Label(frame_date, text=f"星期: {current_weekday}", bg=bg_label_color, fg="#e6f0ea")
+label_weekday.pack(pady=5)
 
 
 # 城市区
@@ -263,8 +288,12 @@ entry_city = ttk.Combobox(frame_city, values=cities, state="normal", width=30)  
 entry_city.set(cities[0])  # 默认选择第一个城市
 entry_city.pack(pady=10)
 
+# 新增：标签用于显示翻译后的中文城市
+label_city_translated = tk.Label(frame_city, text="", bg=bg_label_color, fg="#e6f0ea")
+label_city_translated.pack(pady=5)
+
 # 自动检测城市按钮
-btn_update_city = tk.Button(frame_city, text="自动检测城市", bg=bg_button_color, fg=fg_color_black, command=update_city_entry)
+btn_update_city = tk.Button(frame_city, text="自动检测城市", bg=bg_button_color, fg=fg_color_black, command=lambda: update_city_entry(label_city_translated))
 btn_update_city.pack(pady=5)
 
 # 获取当前选中或输入的城市
@@ -272,12 +301,14 @@ def get_selected_city():
     city = entry_city.get().strip()
     if not city:
         messagebox.showwarning("警告", "请输入或选择一个城市！")
+        return None
     return city
 
-# 自动检测城市逻辑
-def update_city_entry():
+# 自动检测城市逻辑（只修改显示的翻译，不修改 entry_city 的值）
+def update_city_entry(label_translated):
     detected_city = "自动检测到的城市"  # 替换为自动检测逻辑
-    entry_city.set(detected_city)
+    translated_city = translate_city_third_party(detected_city)
+    label_translated.config(text=f"中文城市: {translated_city}")
 
 # 天气区
 frame_weather = tk.Frame(scrollable_frame, bg=bg_color, pady=10)
@@ -292,8 +323,7 @@ entry_weather.pack()
 btn_fetch_weather = tk.Button(frame_weather, text="获取天气", bg=bg_button_color, fg=fg_color_white, command=fetch_weather)
 btn_fetch_weather.pack(pady=5)
 
-# 初始化时自动填入城市
-update_city_entry()
+
 
 # 任务区
 frame_task = tk.Frame(scrollable_frame, bg=bg_color, pady=10)
