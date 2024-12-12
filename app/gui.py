@@ -326,14 +326,115 @@ btn_fetch_weather.pack(pady=5)
 
 
 # 任务区
+tasks = [] #定义任务列表
 frame_task = tk.Frame(scrollable_frame, bg=bg_color, pady=10)
 frame_task.pack(fill="x")
 
-label_task_title = tk.Label(frame_task, text="任务", bg=bg_label_color, fg=fg_color_white)
+# 任务显示框
+label_task_list = tk.Label(frame_task, text="任务列表:", bg=bg_label_color, fg="#e6f0ea")
+label_task_list.pack(pady=5)
+
+task_display = tk.Text(frame_task, width=50, height=10, state="normal", wrap="word")
+task_display.pack(pady=5)
+
+# 任务输入标签和输入框
+label_task_title = tk.Label(frame_task, text="任务输入框：", bg=bg_label_color, fg=fg_color_white)
 label_task_title.pack()
 
-entry_task = tk.Text(frame_task, width=50, height=5, bg="#ffffff", fg=fg_color_black)
-entry_task.pack()
+# 任务输入框
+entry_task = tk.Text(frame_task, width=50, height=10)
+entry_task.pack(pady=5)
+
+
+
+def add_task():
+    """
+    添加任务到任务列表，并显示在 tk.Text 控件中
+    """
+    task = entry_task.get("1.0", tk.END).strip()  # 获取输入框内容
+    if not task:
+        messagebox.showwarning("警告", "任务内容不能为空！")
+        return
+    tasks.append(task)  # 添加任务到任务列表
+    refresh_task_display()  # 更新任务显示
+    entry_task.delete("1.0", tk.END)  # 清空输入框
+
+
+def delete_task():
+    """
+    删除光标所在行的任务
+    """
+    try:
+        # 获取光标所在的行号
+        cursor_index = task_display.index(tk.INSERT)  # 获取光标位置
+        line_number = int(cursor_index.split(".")[0])  # 提取行号
+
+        # 检查是否存在任务
+        if line_number > len(tasks):
+            messagebox.showwarning("警告", "光标未定位在任务行内！")
+            return
+
+        # 删除任务
+        tasks.pop(line_number - 1)  # 删除列表中的任务
+        refresh_task_display()  # 更新任务显示
+    except Exception as e:
+        messagebox.showerror("错误", f"删除任务失败: {e}")
+
+
+def clear_tasks():
+    """
+    清空所有任务
+    """
+    if messagebox.askyesno("确认", "确定清空所有任务吗？"):
+        tasks.clear()  # 清空任务列表
+        refresh_task_display()  # 更新任务显示
+
+
+def mark_task_completed():
+    """
+    标记光标所在行的任务为完成
+    """
+    try:
+        # 获取光标所在的行号
+        cursor_index = task_display.index(tk.INSERT)  # 获取光标位置
+        line_number = int(cursor_index.split(".")[0])  # 提取行号
+
+        # 检查是否存在任务
+        if line_number > len(tasks):
+            messagebox.showwarning("警告", "光标未定位在任务行内！")
+            return
+
+        # 标记任务完成
+        tasks[line_number - 1] += " ✅"
+        refresh_task_display()  # 更新任务显示
+    except Exception as e:
+        messagebox.showerror("错误", f"标记任务失败: {e}")
+
+
+def refresh_task_display():
+    """
+    刷新任务显示框中的内容，显示任务编号
+    """
+    task_display.delete("1.0", tk.END)  # 清空任务显示框
+    for idx, task in enumerate(tasks, start=1):  # 为任务添加编号
+        task_display.insert(tk.END, f"{idx}. {task}\n")  # 显示任务带编号
+
+        
+# 添加任务按钮
+btn_add_task = tk.Button(frame_task, text="添加任务", bg=bg_button_color, fg=fg_color_white, command=add_task)
+btn_add_task.pack(side="left", padx=5, pady=5)
+
+# 删除任务按钮
+btn_delete_task = tk.Button(frame_task, text="删除任务", bg=bg_button_color, fg=fg_color_white, command=delete_task)
+btn_delete_task.pack(side="left", padx=5, pady=5)
+
+# 清空任务按钮
+btn_clear_tasks = tk.Button(frame_task, text="清空任务", bg=bg_button_color, fg=fg_color_white, command=clear_tasks)
+btn_clear_tasks.pack(side="left", padx=5, pady=5)
+
+# 标记完成按钮（可选）
+btn_mark_completed = tk.Button(frame_task, text="标记完成", bg=bg_button_color, fg=fg_color_white, command=mark_task_completed)
+btn_mark_completed.pack(side="left", padx=5, pady=5)
 
 # 保存按钮
 btn_save = tk.Button(frame_task, bg=bg_button_color, fg=fg_color_white, text="保存日志", command=save_log)
