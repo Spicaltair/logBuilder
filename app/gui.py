@@ -1,6 +1,7 @@
 import sys
 import os
 import tkinter as tk
+import sqlite3
 
 from tkinter import ttk  # 导入 ttk 模块
 from tkinter import messagebox
@@ -103,6 +104,33 @@ def preview_log():
 
     btn_close = tk.Button(preview_window, text="关闭", command=preview_window.destroy)
     btn_close.pack(pady=5)
+
+
+def save_task_to_db(date, content, status="未完成"):
+    """
+    将任务保存到数据库
+    """
+    conn = sqlite3.connect("construction_logs.db")  # 数据库文件路径
+    cursor = conn.cursor()
+
+    # 创建 tasks 表（如果不存在）
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS tasks (
+            task_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT NOT NULL,
+            content TEXT NOT NULL,
+            status TEXT DEFAULT '未完成'
+        );
+    ''')
+
+    # 插入任务
+    cursor.execute('''
+        INSERT INTO tasks (date, content, status)
+        VALUES (?, ?, ?)
+    ''', (date, content, status))
+
+    conn.commit()
+    conn.close()
 
 
 # 天气输入
@@ -388,15 +416,18 @@ def add_task():
     添加任务到任务列表，并更新历史记录
     """
     task = entry_task.get("1.0", tk.END).strip()
+    date = entry_date.get()  # 从日期输入框获取值
+    
     if not task:
         messagebox.showwarning("警告", "任务内容不能为空！")
         return
 
-    tasks.append(task)
+    tasks.append(task) # 添加到内存列表
     task_history[task] += 1
-    refresh_task_display()
-    refresh_task_suggestions()
-    entry_task.delete("1.0", tk.END)
+    save_task_to_db(date, task)  # 保存到数据库
+    refresh_task_display()  # 刷新任务显示
+    refresh_task_suggestions()  # 刷新任务建议
+    entry_task.delete("1.0", tk.END)  # 清空输入框
 
 
 def refresh_task_suggestions():

@@ -70,3 +70,9 @@ CREATE TABLE weather (
     recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (log_id) REFERENCES logs (log_id)
 );
+CREATE TABLE IF NOT EXISTS tasks (
+    task_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL,
+    content TEXT NOT NULL,
+    status TEXT DEFAULT '未完成' -- 状态：完成、未完成
+);
