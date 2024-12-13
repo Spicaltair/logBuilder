@@ -8,6 +8,9 @@ from tkinter import filedialog
 from datetime import datetime
 from tkcalendar import DateEntry  # 导入 DateEntry 控件
 
+from collections import Counter
+
+
 
 # 添加 scripts utils 目录到模块搜索路径
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
@@ -39,51 +42,68 @@ weekday_mapping = {
 }
 
 
-
-
 def save_log():
     """
-    保存日志内容到文件或数据库
+    保存日志内容到文件
     """
-    date = entry_date.get_date().strftime("%Y-%m-%d")  # 获取选中的日期
-    weekday = entry_date.get_date().strftime("%A")     # 获取选中的星期
+    date = entry_date.get()
     city = entry_city.get()
-    task = entry_task.get("1.0", tk.END).strip()
     weather = entry_weather.get("1.0", tk.END).strip()
-    weekday_chinese = weekday_mapping[weekday]
 
-    if not date or not task:
-        messagebox.showerror("错误", "日期和任务内容不能为空！")
-        return
+    if not tasks:
+        tasks_content = "无任务记录"
+    else:
+        tasks_content = "\n".join([f"{idx}. {task}" for idx, task in enumerate(tasks, start=1)])
+    
+    # 拼接日志内容
+    log_content = (
+        f"日期: {date}\n"
+        f"城市: {city}\n"
+        f"天气信息:\n{weather}\n\n"
+        f"任务列表:\n{tasks_content}\n"
+    )
 
-    log_content = f"日期: {date}\n星期: {weekday_chinese}\n城市: {city}\n任务: {task}\n天气: {weather}\n"
+    # 保存到文件
     log_path = create_log_file(directory="logs", logs=log_content)
-
     messagebox.showinfo("成功", f"日志已保存到: {log_path}")
+
+    # 清空任务输入框
     entry_task.delete("1.0", tk.END)
+    tasks.clear()  # 清空任务列表
+    refresh_task_display()  # 刷新任务显示框
+
 
 # 预览函数定义
 def preview_log():
     """
-    显示日志预览窗口
+    显示日志预览窗口，包含日期、任务列表、天气等内容
     """
+    # 获取日志信息
     date = entry_date.get()
-    weekday = entry_date.get_date().strftime("%A") 
     city = entry_city.get()
-    task = entry_task.get("1.0", tk.END).strip()
     weather = entry_weather.get("1.0", tk.END).strip()
-    weekday_chinese = weekday_mapping[weekday]
+    
+    if not tasks:
+        tasks_preview = "无任务记录"
+    else:
+        tasks_preview = "\n".join([f"{idx}. {task}" for idx, task in enumerate(tasks, start=1)])
 
     # 创建新窗口显示内容
     preview_window = tk.Toplevel(root)
     preview_window.title("日志预览")
 
-    preview_content = f"日期: {date}\n星期: {weekday_chinese}\n城市: {city}\n任务: {task}\n天气: {weather}\n"
-    label_preview = tk.Label(preview_window, text=preview_content, justify="left")
+    preview_content = (
+        f"日期: {date}\n"
+        f"城市: {city}\n"
+        f"天气信息:\n{weather}\n\n"
+        f"任务列表:\n{tasks_preview}"
+    )
+    label_preview = tk.Label(preview_window, text=preview_content, justify="left", anchor="w")
     label_preview.pack(padx=10, pady=10)
 
     btn_close = tk.Button(preview_window, text="关闭", command=preview_window.destroy)
     btn_close.pack(pady=5)
+
 
 # 天气输入
 
@@ -326,6 +346,7 @@ btn_fetch_weather.pack(pady=5)
 
 
 # 任务区
+task_history = Counter()  # 用于存储任务及其出现次数
 tasks = [] #定义任务列表
 frame_task = tk.Frame(scrollable_frame, bg=bg_color, pady=10)
 frame_task.pack(fill="x")
@@ -336,28 +357,58 @@ label_task_list.pack(pady=5)
 
 task_display = tk.Text(frame_task, width=50, height=10, state="normal", wrap="word")
 task_display.pack(pady=5)
+# 任务建议标签
+label_suggestions = tk.Label(frame_task, text="历史任务建议:", bg=bg_label_color, fg="#e6f0ea")
+label_suggestions.pack(pady=5)
 
-# 任务输入标签和输入框
-label_task_title = tk.Label(frame_task, text="任务输入框：", bg=bg_label_color, fg=fg_color_white)
-label_task_title.pack()
+def select_task_from_history(event):
+    """
+    用户从任务建议中选择任务后填充到输入框
+    """
+    selected_task = combobox_task.get().strip()
+    entry_task.delete("1.0", tk.END)
+    entry_task.insert("1.0", selected_task)
+
+# 创建任务建议下拉菜单
+combobox_task = ttk.Combobox(frame_task, width=50, state="readonly")
+combobox_task.pack(pady=5)
+combobox_task.bind("<<ComboboxSelected>>", select_task_from_history)
+
+# 任务输入框
+label_task = tk.Label(frame_task, text="任务内容:", bg=bg_label_color, fg="#e6f0ea")
+label_task.pack(pady=5)
 
 # 任务输入框
 entry_task = tk.Text(frame_task, width=50, height=10)
 entry_task.pack(pady=5)
 
 
-
 def add_task():
     """
-    添加任务到任务列表，并显示在 tk.Text 控件中
+    添加任务到任务列表，并更新历史记录
     """
-    task = entry_task.get("1.0", tk.END).strip()  # 获取输入框内容
+    task = entry_task.get("1.0", tk.END).strip()
     if not task:
         messagebox.showwarning("警告", "任务内容不能为空！")
         return
-    tasks.append(task)  # 添加任务到任务列表
-    refresh_task_display()  # 更新任务显示
-    entry_task.delete("1.0", tk.END)  # 清空输入框
+
+    tasks.append(task)
+    task_history[task] += 1
+    refresh_task_display()
+    refresh_task_suggestions()
+    entry_task.delete("1.0", tk.END)
+
+
+def refresh_task_suggestions():
+    """
+    刷新任务建议下拉菜单，显示高频任务
+    """
+    sorted_tasks = [task for task, _ in task_history.most_common(10)]
+    combobox_task['values'] = sorted_tasks
+
+
+
+
 
 
 def delete_task():
@@ -419,6 +470,20 @@ def refresh_task_display():
     for idx, task in enumerate(tasks, start=1):  # 为任务添加编号
         task_display.insert(tk.END, f"{idx}. {task}\n")  # 显示任务带编号
 
+def refresh_task_suggestions():
+    """
+    刷新任务建议下拉菜单，显示高频任务
+    """
+    sorted_tasks = [task for task, _ in task_history.most_common(10)]  # 取前10个高频任务
+    combobox_task['values'] = sorted_tasks  # 更新下拉菜单的值
+
+def select_task_from_history(event):
+    """
+    用户从任务建议中选择任务后填充到输入框
+    """
+    selected_task = combobox_task.get().strip()
+    entry_task.delete("1.0", tk.END)
+    entry_task.insert("1.0", selected_task)
         
 # 添加任务按钮
 btn_add_task = tk.Button(frame_task, text="添加任务", bg=bg_button_color, fg=fg_color_white, command=add_task)
