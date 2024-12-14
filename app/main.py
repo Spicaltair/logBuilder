@@ -1,7 +1,6 @@
 import os
 import sys
 from utils.log_creator import create_log_file
-
 from utils.history_manager import load_history
 
 
@@ -13,8 +12,7 @@ def run_main_app():
     加载用户信息，天气管理
     """
     print("欢迎使用乐标日志 LogBuilder！")
-   # print(create_log_file)
-
+  
     # 调用时，您可以选择性地传递 filename 参数
     log_directory = "logs"
     

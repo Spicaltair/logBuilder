@@ -32,31 +32,7 @@ CREATE TABLE logs (
     summary TEXT,
     FOREIGN KEY (project_id) REFERENCES projects (project_id)
 );
-CREATE TABLE tasks_materials (
-    task_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    log_id INTEGER NOT NULL,
-    task_description TEXT,
-    material_name TEXT,
-    material_quantity REAL,
-    unit TEXT,
-    FOREIGN KEY (log_id) REFERENCES logs (log_id)
-);
-CREATE TABLE issues (
-    issue_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    log_id INTEGER NOT NULL,
-    description TEXT,
-    status TEXT,
-    resolved_date DATE,
-    FOREIGN KEY (log_id) REFERENCES logs (log_id)
-);
-CREATE TABLE attachments (
-    attachment_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    log_id INTEGER NOT NULL,
-    file_path TEXT,
-    upload_date DATE,
-    file_type TEXT,
-    FOREIGN KEY (log_id) REFERENCES logs (log_id)
-);
+
 CREATE TABLE weather (
     weather_id INTEGER PRIMARY KEY AUTOINCREMENT,
     log_id INTEGER NOT NULL,

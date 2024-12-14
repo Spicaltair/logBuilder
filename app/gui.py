@@ -8,10 +8,9 @@ from tkinter import messagebox
 from tkinter import filedialog
 from datetime import datetime
 from tkcalendar import DateEntry  # 导入 DateEntry 控件
+from tkinter import ttk  #导入ttk，控制标签页
 
 from collections import Counter
-
-
 
 # 添加 scripts utils 目录到模块搜索路径
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
@@ -22,15 +21,11 @@ from get_location import get_city
 
 from api_utils import get_dynamic_city_list, get_weather, get_location_data
 
-from translate import Translator
+from data.config import font, bg_button_color, bg_color, bg_label_color, fg_color_black, fg_color_white
 
 
 # 函数区》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》
 
-def translate_city_third_party(city_name):
-    translator = Translator(to_lang="zh")
-    translation = translator.translate(city_name)
-    return translation
 
 weekday_mapping = {
     "Monday": "星期一",
@@ -105,55 +100,7 @@ def preview_log():
     btn_close = tk.Button(preview_window, text="关闭", command=preview_window.destroy)
     btn_close.pack(pady=5)
 
-
-def save_task_to_db(date, content, status="未完成"):
-    """
-    将任务保存到数据库
-    """
-    conn = sqlite3.connect("construction_logs.db")  # 数据库文件路径
-    cursor = conn.cursor()
-
-    # 创建 tasks 表（如果不存在）
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS tasks (
-            task_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT NOT NULL,
-            content TEXT NOT NULL,
-            status TEXT DEFAULT '未完成'
-        );
-    ''')
-
-    # 插入任务
-    cursor.execute('''
-        INSERT INTO tasks (date, content, status)
-        VALUES (?, ?, ?)
-    ''', (date, content, status))
-
-    conn.commit()
-    conn.close()
-
-
-# 天气输入
-
-
-def format_weather_data(weather_data):
-    """
-    将字典格式化为字符串以便在 GUI 中显示
-    """
-    formatted = ""
-    for key, value in weather_data.items():
-        if isinstance(value, dict):
-            # 如果值是嵌套字典，递归格式化
-            formatted += f"{key}:\n" + format_weather_data(value) + "\n"
-        elif isinstance(value, list):
-            # 如果值是列表，格式化列表中的每个元素
-            formatted += f"{key}:\n"
-            for item in value:
-                formatted += f"  - {item}\n"
-        else:
-            # 普通键值对
-            formatted += f"{key}: {value}\n"
-    return formatted
+#城市输入
 
 def update_city_entry():
     """
@@ -167,7 +114,15 @@ def update_city_entry():
 
     entry_city.delete(0, tk.END)
     entry_city.insert(0, default_city)
+# 获取当前选中或输入的城市
+def get_selected_city():
+    city = entry_city.get().strip()
+    if not city:
+        messagebox.showwarning("警告", "请输入或选择一个城市！")
+        return None
+    return city    
     
+# 天气输入    
     
 def fetch_weather():
     """
@@ -218,6 +173,51 @@ def update_weather_display():
         entry_weather.delete("1.0", tk.END)
         entry_weather.insert("1.0", result)
 
+def format_weather_data(weather_data):
+    """
+    将字典格式化为字符串以便在 GUI 中显示
+    """
+    formatted = ""
+    for key, value in weather_data.items():
+        if isinstance(value, dict):
+            # 如果值是嵌套字典，递归格式化
+            formatted += f"{key}:\n" + format_weather_data(value) + "\n"
+        elif isinstance(value, list):
+            # 如果值是列表，格式化列表中的每个元素
+            formatted += f"{key}:\n"
+            for item in value:
+                formatted += f"  - {item}\n"
+        else:
+            # 普通键值对
+            formatted += f"{key}: {value}\n"
+    return formatted
+
+def save_task_to_db(date, content, status="未完成"):
+    """
+    将任务保存到数据库
+    """
+    conn = sqlite3.connect("construction_logs.db")  # 数据库文件路径
+    cursor = conn.cursor()
+
+    # 创建 tasks 表（如果不存在）
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS tasks (
+            task_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT NOT NULL,
+            content TEXT NOT NULL,
+            status TEXT DEFAULT '未完成'
+        );
+    ''')
+
+    # 插入任务
+    cursor.execute('''
+        INSERT INTO tasks (date, content, status)
+        VALUES (?, ?, ?)
+    ''', (date, content, status))
+
+    conn.commit()
+    conn.close()
+
 
 #初始化
 def initialize_defaults():
@@ -246,19 +246,9 @@ def initialize_defaults():
 
 #窗口布置区》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》
 # 创建主窗口
-
-bg_color = "#CFDEE6"  # 主背景颜色（灰白）
-bg_label_color = "#234406" # 主背景颜色（深绿）
-bg_button_color = "#007BFF" #按钮背景颜色（天蓝）
-
-bg_color_test = "#CB7A00"  # 主背景颜色（深绿）
-
-fg_color_white="#e6f0ea" # 前景（白色）
-fg_color_black="#ffffff" #前景（黑色）
-
 root = tk.Tk()
 root.title("LogBuilder！！ ")
-root.geometry("400x500")
+root.geometry("800x600")
 root.config(bg=bg_color)  # 设置背景颜色-深绿
 
 # 添加一个标签
@@ -269,34 +259,36 @@ label.pack(pady=15)
 #窗口布置区《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《
 #画布和滚动条配置--------------------------------------------------------
 # 创建画布和滚动
-canvas = tk.Canvas(root, bg=bg_color)
-scrollbar = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
-scrollable_frame = tk.Frame(canvas, bg=bg_color)
 
-# 配置滚动条
-scrollable_frame.bind(
-    "<Configure>",
-    lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-)
-canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-canvas.configure(yscrollcommand=scrollbar.set)
+# 创建 Notebook（标签页控件）
+notebook = ttk.Notebook(root)
 
-scrollbar.pack(side="right", fill="y")
-canvas.pack(side="left", fill="both", expand=True)
-# 鼠标滚轮支持
-def _on_mouse_wheel(event):
-    canvas.yview_scroll(-1 * (event.delta // 120), "units")
 
-canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
+# 创建各个标签页的 Frame
+frame_date = tk.Frame(notebook, bg=bg_color, pady=10)  # 日期管理
+frame_city_weather = tk.Frame(notebook, bg=bg_color, pady=10)  # 城市天气
+frame_tasks = tk.Frame(notebook, bg=bg_color, pady=10)  # 任务管理
+frame_project = tk.Frame(notebook, bg=bg_color, pady=10)  # 项目管理
+
+# 将 Frame 添加到 Notebook
+notebook.add(frame_date, text="日期管理")
+notebook.add(frame_city_weather, text="城市天气")
+notebook.add(frame_tasks, text="任务管理")
+notebook.add(frame_project, text="项目管理")
+
+# 在主窗口中显示 Notebook
+notebook.pack(fill="both", expand=True)
 #-------------------------------------------------------------------------------
-
+# 日期功能
+tk.Label(frame_date, text="日期功能区", bg="#CFDEE6", font=("Arial", 14)).pack(pady=10)
+# 你可以把日期选择相关的代码放在这里
 # 自动获取当前日期、城市和天气
 # 获取当前日期和星期
 current_date = datetime.now().strftime("%Y-%m-%d")
 current_weekday = datetime.now().strftime("%A")  # 获取英文星期几
 
 # 日期区
-frame_date = tk.Frame(scrollable_frame, bg=bg_color, pady=10)
+frame_date = tk.Frame(frame_date, bg=bg_color, pady=10)
 frame_date.pack(fill="x")
 
 # 日期标签
@@ -320,96 +312,56 @@ entry_date.bind("<<DateEntrySelected>>", update_weekday)
 label_weekday = tk.Label(frame_date, text=f"星期: {current_weekday}", bg=bg_label_color, fg="#e6f0ea")
 label_weekday.pack(pady=5)
 
+# 城市功能
+tk.Label(frame_city_weather, text="城市和天气功能区", bg="#E6F4F1", font=("Arial", 14)).grid(row=0, column=0, columnspan=2, pady=10)
 
 # 城市区
-frame_city = tk.Frame(scrollable_frame, bg=bg_color, pady=10)
-frame_city.pack(fill="x")
+cities = get_dynamic_city_list()  # 调用函数获取城市列表
 
-label_city = tk.Label(frame_city, text="选择或输入城市:", bg=bg_label_color, fg="#e6f0ea")
-label_city.pack(pady=5)
+label_city = tk.Label(frame_city_weather, text="选择或输入城市:", bg=bg_label_color, fg="#e6f0ea")
+label_city.grid(row=1, column=0, sticky="e", padx=5, pady=5)  # 对齐到右边
 
-# 获取动态城市列表
-cities = get_dynamic_city_list()  # 动态城市列表函数
-
-# 创建城市选择和输入框
-entry_city = ttk.Combobox(frame_city, values=cities, state="normal", width=30)  # 可输入和选择
+entry_city = ttk.Combobox(frame_city_weather, values=cities, state="normal", width=30)  # 可输入和选择
 entry_city.set(cities[0])  # 默认选择第一个城市
-entry_city.pack(pady=10)
+entry_city.grid(row=1, column=1, sticky="w", padx=5, pady=5)  # 对齐到左边
 
-# 新增：标签用于显示翻译后的中文城市
-label_city_translated = tk.Label(frame_city, text="", bg=bg_label_color, fg="#e6f0ea")
-label_city_translated.pack(pady=5)
 
 # 自动检测城市按钮
-btn_update_city = tk.Button(frame_city, text="自动检测城市", bg=bg_button_color, fg=fg_color_black, command=lambda: update_city_entry(label_city_translated))
-btn_update_city.pack(pady=5)
-
-# 获取当前选中或输入的城市
-def get_selected_city():
-    city = entry_city.get().strip()
-    if not city:
-        messagebox.showwarning("警告", "请输入或选择一个城市！")
-        return None
-    return city
-
-# 自动检测城市逻辑（只修改显示的翻译，不修改 entry_city 的值）
-def update_city_entry(label_translated):
-    detected_city = "自动检测到的城市"  # 替换为自动检测逻辑
-    translated_city = translate_city_third_party(detected_city)
-    label_translated.config(text=f"中文城市: {translated_city}")
+btn_update_city = tk.Button(frame_city_weather, text="自动检测城市", bg=bg_button_color, fg=fg_color_black, command=lambda: update_city_entry(label_city_translated))
+btn_update_city.grid(row=3, column=0, columnspan=2, pady=5)  # 跨两列
 
 # 天气区
-frame_weather = tk.Frame(scrollable_frame, bg=bg_color, pady=10)
-frame_weather.pack(fill="x")
-
-label_weather = tk.Label(frame_weather, bg=bg_label_color, fg="#e6f0ea", text="天气信息:")
-label_weather.pack(pady=5)
-
-entry_weather = tk.Text(frame_weather, width=50, height=10, bg="#ffffff", fg="#000000")
-entry_weather.pack()
-
-btn_fetch_weather = tk.Button(frame_weather, text="获取天气", bg=bg_button_color, fg=fg_color_white, command=fetch_weather)
-btn_fetch_weather.pack(pady=5)
+frame_weather = tk.Frame(frame_city_weather, bg=bg_color, pady=10)
+frame_weather.grid(row=0, column=0, sticky="nsew")
 
 
+label_weather = tk.Label(frame_city_weather, bg=bg_label_color, fg="#e6f0ea", text="天气信息:")
+label_weather.grid(row=4, column=0, sticky="e", padx=5, pady=5)
 
+entry_weather = tk.Text(frame_city_weather, width=50, height=5, bg="#ffffff", fg="#000000", wrap="word")
+entry_weather.grid(row=4, column=1, sticky="w", padx=5, pady=5)
+
+btn_fetch_weather = tk.Button(frame_city_weather, text="获取天气", bg=bg_button_color, fg=fg_color_white, command=fetch_weather)
+btn_fetch_weather.grid(row=5, column=0, columnspan=2, pady=5)  # 跨两列
+
+
+
+# 任务功能
+tk.Label(frame_tasks, text="任务功能区", bg="#F4E6E8", font=("Arial", 14)).pack(pady=10)
+# 你可以把任务管理相关的代码放在这里
 # 任务区
-task_history = Counter()  # 用于存储任务及其出现次数
-tasks = [] #定义任务列表
-frame_task = tk.Frame(scrollable_frame, bg=bg_color, pady=10)
-frame_task.pack(fill="x")
-
-# 任务显示框
-label_task_list = tk.Label(frame_task, text="任务列表:", bg=bg_label_color, fg="#e6f0ea")
-label_task_list.pack(pady=5)
-
-task_display = tk.Text(frame_task, width=50, height=10, state="normal", wrap="word")
-task_display.pack(pady=5)
 # 任务建议标签
-label_suggestions = tk.Label(frame_task, text="历史任务建议:", bg=bg_label_color, fg="#e6f0ea")
-label_suggestions.pack(pady=5)
-
-def select_task_from_history(event):
-    """
-    用户从任务建议中选择任务后填充到输入框
-    """
-    selected_task = combobox_task.get().strip()
-    entry_task.delete("1.0", tk.END)
-    entry_task.insert("1.0", selected_task)
-
-# 创建任务建议下拉菜单
-combobox_task = ttk.Combobox(frame_task, width=50, state="readonly")
-combobox_task.pack(pady=5)
-combobox_task.bind("<<ComboboxSelected>>", select_task_from_history)
-
-# 任务输入框
-label_task = tk.Label(frame_task, text="任务内容:", bg=bg_label_color, fg="#e6f0ea")
+# 任务区主框架（容器框架，分为左右两部分）
+# 任务输入框标题
+label_task = tk.Label(frame_tasks, text="任务内容输入框:", bg=bg_label_color, fg="#e6f0ea")
 label_task.pack(pady=5)
 
 # 任务输入框
-entry_task = tk.Text(frame_task, width=50, height=10)
+entry_task = tk.Text(frame_tasks, width=40, height=10)
 entry_task.pack(pady=5)
 
+# 插入默认文字
+entry_task.insert("1.0", "请输入今天的任务")  # 默认提示文字
 
 def add_task():
     """
@@ -422,7 +374,7 @@ def add_task():
         messagebox.showwarning("警告", "任务内容不能为空！")
         return
 
-    tasks.append(task) # 添加到内存列表
+    task.append(task) # 添加到内存列表
     task_history[task] += 1
     save_task_to_db(date, task)  # 保存到数据库
     refresh_task_display()  # 刷新任务显示
@@ -436,10 +388,6 @@ def refresh_task_suggestions():
     """
     sorted_tasks = [task for task, _ in task_history.most_common(10)]
     combobox_task['values'] = sorted_tasks
-
-
-
-
 
 
 def delete_task():
@@ -515,32 +463,9 @@ def select_task_from_history(event):
     selected_task = combobox_task.get().strip()
     entry_task.delete("1.0", tk.END)
     entry_task.insert("1.0", selected_task)
-        
-# 添加任务按钮
-btn_add_task = tk.Button(frame_task, text="添加任务", bg=bg_button_color, fg=fg_color_white, command=add_task)
-btn_add_task.pack(side="left", padx=5, pady=5)
+       
 
-# 删除任务按钮
-btn_delete_task = tk.Button(frame_task, text="删除任务", bg=bg_button_color, fg=fg_color_white, command=delete_task)
-btn_delete_task.pack(side="left", padx=5, pady=5)
 
-# 清空任务按钮
-btn_clear_tasks = tk.Button(frame_task, text="清空任务", bg=bg_button_color, fg=fg_color_white, command=clear_tasks)
-btn_clear_tasks.pack(side="left", padx=5, pady=5)
-
-# 标记完成按钮（可选）
-btn_mark_completed = tk.Button(frame_task, text="标记完成", bg=bg_button_color, fg=fg_color_white, command=mark_task_completed)
-btn_mark_completed.pack(side="left", padx=5, pady=5)
-
-# 保存按钮
-btn_save = tk.Button(frame_task, bg=bg_button_color, fg=fg_color_white, text="保存日志", command=save_log)
-btn_save.pack(side="bottom", padx=5)
-# 预览按钮
-btn_preview = tk.Button(frame_task, bg=bg_button_color, fg=fg_color_white, text="预览日志", command=preview_log)
-btn_preview.pack(side="bottom", padx=5)
-
-# 插入默认文字
-entry_task.insert("1.0", "请输入今天的任务")  # "1.0" 表示从第一行第一个字符开始
 
 def clear_default(event):
     if entry_task.get("1.0", tk.END).strip() == "请输入今天的任务":
@@ -548,6 +473,89 @@ def clear_default(event):
 
 
 entry_task.bind("<FocusIn>", clear_default)  # 绑定焦点事件
+
+def select_task_from_history(event):
+    """
+    用户从任务建议中选择任务后填充到输入框
+    """
+    selected_task = combobox_task.get().strip()
+    entry_task.delete("1.0", tk.END)
+    entry_task.insert("1.0", selected_task)
+
+
+frame_tasks = tk.Frame(frame_tasks, bg=bg_color, pady=10)
+frame_tasks.pack(fill="x")
+
+# 左侧：任务显示区
+frame_task_list = tk.Frame(frame_tasks, bg=bg_color, width=300, pady=10)
+frame_task_list.pack(side="left", fill="y", padx=10)
+
+# 任务显示框标题
+label_task_list = tk.Label(frame_task_list, text="任务列表显示:", bg=bg_label_color, fg="#e6f0ea")
+label_task_list.pack(pady=5)
+
+# 任务显示框
+task_display = tk.Text(frame_task_list, width=40, height=20, state="normal", wrap="word")
+task_display.pack(pady=5)
+
+# 任务显示相关按钮（预览、保存）
+btn_preview = tk.Button(frame_task_list, text="预览日志", bg=bg_button_color, fg=fg_color_white, command=preview_log)
+btn_preview.pack(pady=5)
+
+btn_save = tk.Button(frame_task_list, text="保存日志", bg=bg_button_color, fg=fg_color_white, command=save_log)
+btn_save.pack(pady=5)
+
+# 右侧：任务输入区
+frame_task_input = tk.Frame(frame_tasks, bg=bg_color, width=300, pady=10)
+frame_task_input.pack(side="right", fill="y", padx=10)
+
+# 历史任务建议标题
+label_suggestions = tk.Label(frame_task_input, text="历史任务建议:", bg=bg_label_color, fg="#e6f0ea")
+label_suggestions.pack(pady=5)
+
+# 创建任务建议下拉菜单
+combobox_task = ttk.Combobox(frame_task_input, width=40, state="readonly")
+combobox_task.pack(pady=5)
+
+def select_task_from_history(event):
+    """
+    用户从任务建议中选择任务后填充到输入框
+    """
+    selected_task = combobox_task.get().strip()
+    entry_task.delete("1.0", tk.END)
+    entry_task.insert("1.0", selected_task)
+
+combobox_task.bind("<<ComboboxSelected>>", select_task_from_history)
+
+
+
+def clear_default(event):
+    """
+    清空默认提示文字
+    """
+    if entry_task.get("1.0", tk.END).strip() == "请输入今天的任务":
+        entry_task.delete("1.0", tk.END)
+
+entry_task.bind("<FocusIn>", clear_default)  # 绑定焦点事件
+
+# 输入区按钮：添加、删除、清空、标记完成
+btn_add_task = tk.Button(frame_task_input, text="添加任务", bg=bg_button_color, fg=fg_color_white, command=add_task)
+btn_add_task.pack(side="top", padx=5, pady=5)
+
+btn_delete_task = tk.Button(frame_task_input, text="删除任务", bg=bg_button_color, fg=fg_color_white, command=delete_task)
+btn_delete_task.pack(side="top", padx=5, pady=5)
+
+btn_clear_tasks = tk.Button(frame_task_input, text="清空任务", bg=bg_button_color, fg=fg_color_white, command=clear_tasks)
+btn_clear_tasks.pack(side="top", padx=5, pady=5)
+
+btn_mark_completed = tk.Button(frame_task_input, text="标记完成", bg=bg_button_color, fg=fg_color_white, command=mark_task_completed)
+btn_mark_completed.pack(side="top", padx=5, pady=5)
+
+
+
+# 项目管理功能
+tk.Label(frame_project, text="项目管理功能区,建设中......", bg="#F4E6E8", font=("Arial", 14)).pack(pady=10)
+
 
 
 
