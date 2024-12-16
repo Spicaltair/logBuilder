@@ -60,7 +60,15 @@ def initialize_database():
             FOREIGN KEY (project_id) REFERENCES Projects (project_id)
         )
     ''')
-    
+    # 创建任务频度表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS TasksHistory (
+            task_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            content TEXT NOT NULL UNIQUE,
+            frequency INTEGER DEFAULT 0, 
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')   
     
     # 创建 Weather 表
     cursor.execute('''

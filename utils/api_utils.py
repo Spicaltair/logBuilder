@@ -4,6 +4,7 @@ import requests
 
 api_key = "a50b80b50d70a0d26b0f43b6e2f03e4b"  # 替换为实际的 API 密钥
 
+
 def fetch_city_list():
     """
     模拟获取城市列表的 API 调用
@@ -12,9 +13,18 @@ def fetch_city_list():
         response = requests.get('https://countriesnow.space/api/v0.1/countries/population/cities')
         response.raise_for_status()
         data = response.json()
-        return [city['city'] for city in data['data']]
+
+        # 获取城市列表并去重
+        cities = [city['city'] for city in data['data']]
+
+        # 去除重复城市
+        unique_cities = list(set(cities))
+
+        return unique_cities
+
     except Exception as e:
         raise RuntimeError(f"无法获取城市列表: {e}")
+
 
 def get_weather(city):
     """
