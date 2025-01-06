@@ -15,6 +15,7 @@ def initialize_database():
     初始化 SQLite 数据库，创建必要的表
     """
     conn = sqlite3.connect(db_path)
+    conn.execute("PRAGMA foreign_keys = ON")  # 启用外键约束
     cursor = conn.cursor()
 
     # 创建项目表
@@ -90,10 +91,8 @@ def initialize_database():
         user_id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
         email TEXT NOT NULL UNIQUE,
-        password_hash TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
-    """)
 
     # 创建用户-项目表
     cursor.execute("""

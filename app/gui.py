@@ -14,6 +14,8 @@ from collections import Counter
 # 添加 scripts utils 目录到模块搜索路径
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'scripts')))
+# 定义base dir
+base_dir = os.path.dirname(os.path.abspath(__file__))
 
 from utils.log_creator import create_log_file
 from scripts.get_location import get_city
@@ -48,41 +50,16 @@ def convert_to_chinese_weekday(english_weekday):
 
     return week_map.get(english_weekday, "未知")
 
-def save_log():
-    """
-    保存日志内容到文件
-    """
-    date = entry_date.get()
-    city = entry_city.get()
-    weather = entry_weather.get("1.0", tk.END).strip()
-
-    if not tasks:
-        tasks_content = "无任务记录"
-    else:
-        tasks_content = "\n".join([f"{idx}. {task}" for idx, task in enumerate(tasks, start=1)])
-    
-    # 拼接日志内容
-    log_content = (
-        f"日期: {date}\n"
-        f"城市: {city}\n"
-        f"天气信息:\n{weather}\n\n"
-        f"任务列表:\n{tasks_content}\n"
-    )
-
-    # 保存到文件
-    log_path = create_log_file(directory="logs", logs=log_content)
-    messagebox.showinfo("成功", f"日志已保存到: {log_path}")
-
-    # 清空任务输入框
-    entry_task.delete("1.0", tk.END)
-    tasks.clear()  # 清空任务列表
-    refresh_task_display()  # 刷新任务显示框
 
 
-# 预览函数定义
+
+
+# 设置数据库路径
+db_path = "data/construction_logs.db"  # 固定数据库路径
+
 def preview_log():
     """
-    显示日志预览窗口，包含日期、任务列表、天气等内容
+    显示日志预览窗口，包含日期、任务列表、天气、项目名称和日志记录者信息。
     """
     # 获取日志信息
     date = entry_date.get()
@@ -94,6 +71,78 @@ def preview_log():
     else:
         tasks_preview = "\n".join([f"{idx}. {task}" for idx, task in enumerate(tasks, start=1)])
 
+    try:
+        # 获取项目名称和日志记录者（假设 user_projects 表中有项目名称和用户信息）
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(''' 
+                SELECT project_name, user_name 
+                FROM Users_Projects 
+                WHERE date = ? 
+                ORDER BY id DESC 
+                LIMIT 1 
+            ''', (date,))
+            result = cursor.fetchone()
+            if result:
+                project_name, user_name = result
+            else:
+                project_name, user_name = "未知项目", "未知用户"
+    except sqlite3.DatabaseError as e:
+        messagebox.showerror("数据库错误", f"无法获取项目信息: {e}")
+        project_name, user_name = "未知项目", "未知用户"
+
+    # 显示日志预览（可自定义显示方式）
+    messagebox.showinfo("日志预览", f"日期: {date}\n城市: {city}\n天气: {weather}\n任务: {tasks_preview}\n项目: {project_name}\n记录者: {user_name}")
+
+def save_log():
+    """
+    保存日志内容到数据库
+    """
+    date = entry_date.get()
+    city = entry_city.get()
+    weather = entry_weather.get("1.0", tk.END).strip()
+
+    if not tasks:
+        tasks_content = "无任务记录"
+    else:
+        tasks_content = "\n".join([f"{idx}. {task}" for idx, task in enumerate(tasks, start=1)])
+    
+    # 获取项目名称和记录者（假设在界面中有相关输入框或预设值）
+    project_name = "默认项目"  # 你可以根据实际情况从界面或数据库中获取
+    user_name = "记录者"  # 假设这里固定为"记录者"，你也可以动态获取用户信息
+    
+    # 拼接日志内容
+    log_content = (
+        f"日期: {date}\n"
+        f"城市: {city}\n"
+        f"天气信息:\n{weather}\n\n"
+        f"任务列表:\n{tasks_content}\n"
+        f"项目名称: {project_name}\n"
+        f"记录者: {user_name}\n"
+    )
+
+    try:
+        # 保存日志到数据库
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+
+            # 插入日志信息到数据库的 Logs 表
+            cursor.execute('''
+                INSERT INTO Logs (date, city, weather, tasks, project_name, user_name)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (date, city, weather, tasks_content, project_name, user_name))
+            
+            conn.commit()
+            messagebox.showinfo("成功", f"日志已保存到数据库。")
+            
+    except sqlite3.DatabaseError as e:
+        messagebox.showerror("数据库错误", f"保存日志失败: {e}")
+
+    # 清空任务输入框
+    entry_task.delete("1.0", tk.END)
+    tasks.clear()  # 清空任务列表
+    refresh_task_display()  # 刷新任务显示框
+
     # 创建新窗口显示内容
     preview_window = tk.Toplevel(root)
     preview_window.title("日志预览")
@@ -102,37 +151,38 @@ def preview_log():
         f"日期: {date}\n"
         f"城市: {city}\n"
         f"天气信息:\n{weather}\n\n"
+        f"项目名称: {project_name}\n"
+        f"日志记录者: {user_name}\n\n"
         f"任务列表:\n{tasks_preview}"
     )
-    label_preview = tk.Label(preview_window, text=preview_content, justify="left", anchor="w")
+    label_preview = tk.Label(preview_window, text=preview_content, justify="left", anchor="w", bg=bg_label_color, fg=fg_color_white, font=font_common_12)
     label_preview.pack(padx=10, pady=10)
 
-    btn_close = tk.Button(preview_window, text="关闭", command=preview_window.destroy)
+    btn_close = tk.Button(preview_window, text="关闭", command=preview_window.destroy, bg=bg_button_color, fg=fg_color_white, font=font_common_12)
     btn_close.pack(pady=5)
 
 
-    # 插入任务
-    cursor.execute('''
-        INSERT INTO tasks (date, content, status)
-        VALUES (?, ?, ?)
-    ''', (date, content, status))
-
-    conn.commit()
-    conn.close()
-
-
-
-def save_task_to_db(date, content, status="未完成"):
+def save_task_to_db(date, project_id, content, user_name, status="未完成"):
+    """
+    保存任务到数据库。
+    """
     try:
         with sqlite3.connect("construction_logs.db") as conn:
             cursor = conn.cursor()
+            # 保存任务到 tasks 表
             cursor.execute('''
                 INSERT INTO tasks (date, content, status)
                 VALUES (?, ?, ?)
             ''', (date, content, status))
+            # 保存到 user_projects 表
+            cursor.execute('''
+                INSERT INTO user_projects (date, project_name, user_name)
+                VALUES (?, ?, ?)
+            ''', (date, project_id, user_name))
             conn.commit()
     except sqlite3.DatabaseError as e:
         messagebox.showerror("数据库错误", f"数据库操作失败: {e}")
+
 
 
 #函数区《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《《
@@ -637,14 +687,27 @@ def submit_project():
     start_date = start_date_entry.get()
     end_date = end_date_entry.get()
     project_description = project_description_entry.get("1.0", "end").strip()
+
     if project_name and project_manager and start_date and end_date:
-        messagebox.showinfo("成功", f"项目 {project_name} 信息已保存！")
-        # 清空输入框
-        project_name_entry.delete(0, "end")
-        project_manager_entry.delete(0, "end")
-        project_description_entry.delete("1.0", "end")
+        try:
+            with sqlite3.connect(db_path) as conn:
+                cursor = conn.cursor()
+
+                # 插入项目信息到数据库的 Projects 表
+                cursor.execute("""
+                    INSERT INTO Projects (name, description, start_date, end_date)
+                    VALUES (?, ?, ?, ?)
+                """, (project_name, project_description, start_date, end_date))
+
+                conn.commit()
+                messagebox.showinfo("成功", f"项目 {project_name} 信息已保存！")
+            
+        except sqlite3.Error as e:
+            messagebox.showerror("数据库错误", f"插入项目数据时发生错误: {e}")
     else:
         messagebox.showwarning("警告", "请完整填写所有信息！")
+
+
 
 tk.Button(frame_project, text="提交项目信息", bg=bg_button_color, fg=fg_color_white, font=font_common_12, command=submit_project).pack(pady=10)
 
@@ -681,22 +744,43 @@ user_notes_entry = tk.Text(user_form_frame, width=30, height=4, font=font_common
 user_notes_entry.grid(row=4, column=1, padx=5, pady=5)
 
 # 提交按钮
+
 def submit_user():
     user_name = user_name_entry.get()
-    user_role = user_role_entry.get()
+    user_role = user_role_entry.get()  # 如果此字段要插入，确保数据库中有对应字段
     user_email = user_email_entry.get()
     register_date = register_date_entry.get()
     user_notes = user_notes_entry.get("1.0", "end").strip()
+
     if user_name and user_role and user_email and register_date:
-        messagebox.showinfo("成功", f"用户 {user_name} 信息已保存！")
-        # 清空输入框
-        user_name_entry.delete(0, "end")
-        user_role_entry.delete(0, "end")
-        user_email_entry.delete(0, "end")
-        user_notes_entry.delete("1.0", "end")
+        try:
+            # 使用正确的数据库路径
+            db_path = os.path.join(base_dir, 'data', 'construction_logs.db')
+
+            # 创建数据库连接
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+
+            # 插入用户信息到数据库
+            cursor.execute("""
+                INSERT INTO Users (username, email, created_at)
+                VALUES (?, ?, ?)
+            """, (user_name, user_email, register_date))
+
+            conn.commit()
+            conn.close()
+
+            messagebox.showinfo("成功", f"用户 {user_name} 信息已保存！")
+            
+            # 清空输入框
+            user_name_entry.delete(0, "end")
+            user_role_entry.delete(0, "end")
+            user_email_entry.delete(0, "end")
+            user_notes_entry.delete("1.0", "end")
+        except sqlite3.Error as e:
+            messagebox.showerror("数据库错误", f"插入用户数据时发生错误: {e}")
     else:
         messagebox.showwarning("警告", "请完整填写所有信息！")
-
 tk.Button(frame_user, text="提交用户信息", bg=bg_button_color, fg=fg_color_white, font=font_common_12, command=submit_user).pack(pady=10)
 
 # 退出前询问是否保存日志
