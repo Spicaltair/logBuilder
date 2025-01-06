@@ -597,14 +597,107 @@ def clear_default(event):
 entry_task.bind("<FocusIn>", clear_default)  # 绑定焦点事件
 
 
-
-
-
 # 项目管理功能
-tk.Label(frame_project, text="项目管理功能区,建设中......", bg="#F4E6E8", font=("Arial", 14)).pack(pady=10)
+tk.Label(frame_project, text="输入项目信息", bg=bg_label_color, fg=fg_color_white, font=font_title_14).pack(pady=10)
+
+# 输入框容器
+form_frame = tk.Frame(frame_project, bg=bg_color)
+form_frame.pack(pady=10)
+
+# 项目名称
+tk.Label(form_frame, text="项目名称：", bg=bg_label_color, fg=fg_color_white, font=font_common_12).grid(row=0, column=0, sticky="e", padx=5, pady=5)
+project_name_entry = tk.Entry(form_frame, width=30, font=font_common_12)
+project_name_entry.grid(row=0, column=1, padx=5, pady=5)
+
+# 项目负责人
+tk.Label(form_frame, text="项目负责人：", bg=bg_label_color, fg=fg_color_white, font=font_common_12).grid(row=1, column=0, sticky="e", padx=5, pady=5)
+project_manager_entry = tk.Entry(form_frame, width=30, font=font_common_12)
+project_manager_entry.grid(row=1, column=1, padx=5, pady=5)
+
+
+# 开始日期
+tk.Label(form_frame, text="开始日期：", bg=bg_label_color, fg=fg_color_white, font=font_common_12).grid(row=2, column=0, sticky="e", padx=5, pady=5)
+start_date_entry = DateEntry(form_frame, width=28, font=font_common_12, date_pattern="yyyy-MM-dd", background=bg_button_color, foreground=fg_color_white)
+start_date_entry.grid(row=2, column=1, padx=5, pady=5)
+
+# 结束日期
+tk.Label(form_frame, text="结束日期：", bg=bg_label_color, fg=fg_color_white, font=font_common_12).grid(row=3, column=0, sticky="e", padx=5, pady=5)
+end_date_entry = DateEntry(form_frame, width=28, font=font_common_12, date_pattern="yyyy-MM-dd", background=bg_button_color, foreground=fg_color_white)
+end_date_entry.grid(row=3, column=1, padx=5, pady=5)
+
+# 项目描述
+tk.Label(form_frame, text="项目描述：", bg=bg_label_color, fg=fg_color_white, font=font_common_12).grid(row=4, column=0, sticky="ne", padx=5, pady=5)
+project_description_entry = tk.Text(form_frame, width=30, height=4, font=font_common_12)
+project_description_entry.grid(row=4, column=1, padx=5, pady=5)
+
+# 提交按钮
+def submit_project():
+    project_name = project_name_entry.get()
+    project_manager = project_manager_entry.get()
+    start_date = start_date_entry.get()
+    end_date = end_date_entry.get()
+    project_description = project_description_entry.get("1.0", "end").strip()
+    if project_name and project_manager and start_date and end_date:
+        messagebox.showinfo("成功", f"项目 {project_name} 信息已保存！")
+        # 清空输入框
+        project_name_entry.delete(0, "end")
+        project_manager_entry.delete(0, "end")
+        project_description_entry.delete("1.0", "end")
+    else:
+        messagebox.showwarning("警告", "请完整填写所有信息！")
+
+tk.Button(frame_project, text="提交项目信息", bg=bg_button_color, fg=fg_color_white, font=font_common_12, command=submit_project).pack(pady=10)
 
 # 用户管理功能
-tk.Label(frame_user, text="用户管理功能区,建设中......", bg="#F4E6E8", font=("Arial", 14)).pack(pady=10)
+tk.Label(frame_user, text="输入用户信息", bg=bg_label_color, fg=fg_color_white, font=font_title_14).pack(pady=10)
+
+# 输入框容器
+user_form_frame = tk.Frame(frame_user, bg=bg_color)
+user_form_frame.pack(pady=10)
+
+# 用户姓名
+tk.Label(user_form_frame, text="用户姓名：", bg=bg_label_color, fg=fg_color_white, font=font_common_12).grid(row=0, column=0, sticky="e", padx=5, pady=5)
+user_name_entry = tk.Entry(user_form_frame, width=30, font=font_common_12)
+user_name_entry.grid(row=0, column=1, padx=5, pady=5)
+
+# 用户角色
+tk.Label(user_form_frame, text="用户角色：", bg=bg_label_color, fg=fg_color_white, font=font_common_12).grid(row=1, column=0, sticky="e", padx=5, pady=5)
+user_role_entry = tk.Entry(user_form_frame, width=30, font=font_common_12)
+user_role_entry.grid(row=1, column=1, padx=5, pady=5)
+
+# 用户邮箱
+tk.Label(user_form_frame, text="用户邮箱：", bg=bg_label_color, fg=fg_color_white, font=font_common_12).grid(row=2, column=0, sticky="e", padx=5, pady=5)
+user_email_entry = tk.Entry(user_form_frame, width=30, font=font_common_12)
+user_email_entry.grid(row=2, column=1, padx=5, pady=5)
+
+# 注册日期
+tk.Label(user_form_frame, text="注册日期：", bg=bg_label_color, fg=fg_color_white, font=font_common_12).grid(row=3, column=0, sticky="e", padx=5, pady=5)
+register_date_entry = DateEntry(user_form_frame, width=28, font=font_common_12, date_pattern="yyyy-MM-dd", background=bg_button_color, foreground=fg_color_white)
+register_date_entry.grid(row=3, column=1, padx=5, pady=5)
+
+# 用户备注
+tk.Label(user_form_frame, text="用户备注：", bg=bg_label_color, fg=fg_color_white, font=font_common_12).grid(row=4, column=0, sticky="ne", padx=5, pady=5)
+user_notes_entry = tk.Text(user_form_frame, width=30, height=4, font=font_common_12)
+user_notes_entry.grid(row=4, column=1, padx=5, pady=5)
+
+# 提交按钮
+def submit_user():
+    user_name = user_name_entry.get()
+    user_role = user_role_entry.get()
+    user_email = user_email_entry.get()
+    register_date = register_date_entry.get()
+    user_notes = user_notes_entry.get("1.0", "end").strip()
+    if user_name and user_role and user_email and register_date:
+        messagebox.showinfo("成功", f"用户 {user_name} 信息已保存！")
+        # 清空输入框
+        user_name_entry.delete(0, "end")
+        user_role_entry.delete(0, "end")
+        user_email_entry.delete(0, "end")
+        user_notes_entry.delete("1.0", "end")
+    else:
+        messagebox.showwarning("警告", "请完整填写所有信息！")
+
+tk.Button(frame_user, text="提交用户信息", bg=bg_button_color, fg=fg_color_white, font=font_common_12, command=submit_user).pack(pady=10)
 
 # 退出前询问是否保存日志
 def on_exit():

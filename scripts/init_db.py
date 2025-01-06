@@ -10,91 +10,103 @@ db_path = os.path.join(base_dir, 'data', 'construction_logs.db')
 # 确保 data 目录存在
 os.makedirs(os.path.dirname(db_path), exist_ok=True)
 
-# 创建数据库连接
-conn = sqlite3.connect(db_path)
-cursor = conn.cursor()
-
-
-
-
 def initialize_database():
     """
     初始化 SQLite 数据库，创建必要的表
     """
-    conn = sqlite3.connect('data/construction_logs.db')
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-
 
     # 创建项目表
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS projects (
+    CREATE TABLE IF NOT EXISTS Projects (
         project_id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         description TEXT,
         start_date DATE,
         end_date DATE,
-        manager TEXT
+        city TEXT NOT NULL,
+        scale TEXT NOT NULL,
+        type TEXT NOT NULL
     );
     """)
-    
+
     # 创建日志表
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        project_id INTEGER,
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS Logs (
+        log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_id INTEGER NOT NULL,
         date TEXT NOT NULL,
         city TEXT NOT NULL,
         task TEXT NOT NULL,
-        weather TEXT
+        user_id INTEGER,
+        weather TEXT,
+        FOREIGN KEY (project_id) REFERENCES Projects (project_id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES Users (user_id) ON DELETE SET NULL
     );
-    ''')
-    
+    """)
+
     # 创建任务表
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS Tasks (
-            task_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            content TEXT NOT NULL,
-            date DATE NOT NULL,
-            status TEXT DEFAULT '未完成',
-            project_id INTEGER,
-            FOREIGN KEY (project_id) REFERENCES Projects (project_id)
-        )
-    ''')
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS Tasks (
+        task_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        log_id INTEGER NOT NULL,
+        project_id INTEGER NOT NULL,
+        content TEXT NOT NULL,
+        comment TEXT,
+        status TEXT DEFAULT '未完成',
+        FOREIGN KEY (log_id) REFERENCES Logs (log_id) ON DELETE CASCADE,
+        FOREIGN KEY (project_id) REFERENCES Projects (project_id) ON DELETE CASCADE
+    );
+    """)
+
     # 创建任务频度表
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS TasksHistory (
-            task_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            content TEXT NOT NULL UNIQUE,
-            frequency INTEGER DEFAULT 0, 
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')   
-    
-    # 创建 Weather 表
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS Weather (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT NOT NULL,
-            temperature REAL,
-            wind_speed REAL,
-            humidity REAL,
-            description TEXT,
-            project_id INTEGER,
-            FOREIGN KEY (project_id) REFERENCES Projects (id)
-        )
-    ''')    
-    
-     # 创建用户表
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS Users (
-            user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL UNIQUE,
-            email TEXT NOT NULL UNIQUE,
-            password_hash TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')   
-    
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS TasksHistory (
+        task_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        content TEXT NOT NULL UNIQUE,
+        frequency INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
+    # 创建天气表
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS Weather (
+        weather_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        temperature REAL,
+        wind_speed REAL,
+        humidity REAL,
+        description TEXT,
+        FOREIGN KEY (project_id) REFERENCES Projects (project_id) ON DELETE CASCADE
+    );
+    """)
+
+    # 创建用户表
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS Users (
+        user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        email TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
+    # 创建用户-项目表
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS Users_Projects (
+        user_project_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        project_id INTEGER NOT NULL,
+        role TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES Users (user_id) ON DELETE CASCADE,
+        FOREIGN KEY (project_id) REFERENCES Projects (project_id) ON DELETE CASCADE
+    );
+    """)
+
     conn.commit()
     conn.close()
     print("数据库已成功初始化！")
