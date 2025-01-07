@@ -24,7 +24,6 @@ from utils.api_utils import get_dynamic_city_list, get_weather, get_location_dat
 
 from data.config import font_title_14, font_common_12, bg_button_color, bg_color, bg_label_color, fg_color_black, fg_color_white
 
-
 # 函数区》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》
 
 
@@ -162,7 +161,7 @@ def save_log():
     btn_close.pack(pady=5)
 
 
-def save_task_to_db(date, project_id, content, user_name, status="未完成"):
+def save_task_to_db(date, content, status="未完成"):
     """
     保存任务到数据库。
     """
@@ -178,7 +177,7 @@ def save_task_to_db(date, project_id, content, user_name, status="未完成"):
             cursor.execute('''
                 INSERT INTO user_projects (date, project_name, user_name)
                 VALUES (?, ?, ?)
-            ''', (date, project_id, user_name))
+            ''', (date, content, status))
             conn.commit()
     except sqlite3.DatabaseError as e:
         messagebox.showerror("数据库错误", f"数据库操作失败: {e}")
@@ -356,7 +355,11 @@ def initialize_defaults():
             print(f"初始化天气信息成功: {weather}")
     except Exception as e:
         print(f"初始化时发生错误: {e}")
-initialize_defaults()
+try:
+    initialize_defaults()
+except Exception as e:
+    print(f"初始化时发生错误: {e}".encode("utf-8").decode("utf-8"))
+
 
 #城市输入
 
@@ -448,7 +451,7 @@ def add_task():
         return
 
     tasks.append(task) # 添加到内存列表
-    save_task_to_db(date, task)  # 保存到数据库
+    save_task_to_db(date, task,status="未完成")  # 保存到数据库
     refresh_task_display()  # 刷新任务显示
     update_task_history(task)  # 更新任务历史
     entry_task.delete("1.0", tk.END)  # 清空输入框
