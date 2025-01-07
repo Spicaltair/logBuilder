@@ -91,9 +91,9 @@ def initialize_database():
         user_id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
         email TEXT NOT NULL UNIQUE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        role TEXT NOT NULL
     );
-
+    """)
     # 创建用户-项目表
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS Users_Projects (

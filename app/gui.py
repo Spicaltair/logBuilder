@@ -733,39 +733,38 @@ tk.Label(user_form_frame, text="用户邮箱：", bg=bg_label_color, fg=fg_color
 user_email_entry = tk.Entry(user_form_frame, width=30, font=font_common_12)
 user_email_entry.grid(row=2, column=1, padx=5, pady=5)
 
-# 注册日期
-tk.Label(user_form_frame, text="注册日期：", bg=bg_label_color, fg=fg_color_white, font=font_common_12).grid(row=3, column=0, sticky="e", padx=5, pady=5)
-register_date_entry = DateEntry(user_form_frame, width=28, font=font_common_12, date_pattern="yyyy-MM-dd", background=bg_button_color, foreground=fg_color_white)
-register_date_entry.grid(row=3, column=1, padx=5, pady=5)
-
-# 用户备注
-tk.Label(user_form_frame, text="用户备注：", bg=bg_label_color, fg=fg_color_white, font=font_common_12).grid(row=4, column=0, sticky="ne", padx=5, pady=5)
-user_notes_entry = tk.Text(user_form_frame, width=30, height=4, font=font_common_12)
-user_notes_entry.grid(row=4, column=1, padx=5, pady=5)
 
 # 提交按钮
 
 def submit_user():
     user_name = user_name_entry.get()
-    user_role = user_role_entry.get()  # 如果此字段要插入，确保数据库中有对应字段
     user_email = user_email_entry.get()
-    register_date = register_date_entry.get()
-    user_notes = user_notes_entry.get("1.0", "end").strip()
+    user_role = user_role_entry.get()  # 如果此字段要插入，确保数据库中有对应字段
+    
+    
 
-    if user_name and user_role and user_email and register_date:
+    if user_name and user_email and user_role:
         try:
-            # 使用正确的数据库路径
-            db_path = os.path.join(base_dir, 'data', 'construction_logs.db')
+            # 修改 base_dir 定义为项目根目录
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+            # 构造数据库路径
+            db_path = os.path.join(base_dir, 'data', 'construction_logs.db')
+            print("数据库路径:", db_path)
+
+
+            if not os.path.exists(os.path.dirname(db_path)):
+                messagebox.showerror("错误", "数据库路径不存在，请检查基础目录配置！")
+            return
             # 创建数据库连接
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
 
             # 插入用户信息到数据库
             cursor.execute("""
-                INSERT INTO Users (username, email, created_at)
+                INSERT INTO Users (username, email, role)
                 VALUES (?, ?, ?)
-            """, (user_name, user_email, register_date))
+            """, (user_name, user_email, user_role))
 
             conn.commit()
             conn.close()
@@ -776,7 +775,7 @@ def submit_user():
             user_name_entry.delete(0, "end")
             user_role_entry.delete(0, "end")
             user_email_entry.delete(0, "end")
-            user_notes_entry.delete("1.0", "end")
+            
         except sqlite3.Error as e:
             messagebox.showerror("数据库错误", f"插入用户数据时发生错误: {e}")
     else:
