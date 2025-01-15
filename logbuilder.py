@@ -1,28 +1,33 @@
 import os
 import sys
-from app.main import run_main_app
-from app.gui import run_gui
-from scripts.init_db import initialize_database
 
-# 确保输出流使用 UTF-8
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+print("Script is running...")
 
-# 添加项目根目录到 Python 搜索路径
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+try:
+    # 确保路径添加正确
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    print("Paths appended:", sys.path)
 
+    # 导入模块
+    from app.main import run_main_app
+    from app.gui import run_gui
+    from scripts.init_db import initialize_database
 
-if __name__ == "__main__":
-    print("Initializing LogBuilder...")
-    print("欢迎使用乐标日志 LogBuilder！")
-    
-    # 启动核心逻辑（如创建日志文件等）
-    run_main_app()
+    print("Modules imported successfully.")
 
-    # 初始化数据库
-    print("Initializing database...")
-    initialize_database()
-    print("Database initialized.")
+    if __name__ == "__main__":
+        print("Inside main block...")
 
+        # 核心逻辑
+        print("Running main app...")
+        run_main_app()
 
-    # 启动 GUI
-    run_gui()
+        # 数据库初始化
+        print("Initializing database...")
+        initialize_database()
+
+        # GUI 启动
+        print("Starting GUI...")
+        run_gui()
+except Exception as e:
+    print(f"Error occurred: {e}")

@@ -8,17 +8,16 @@ from tkinter import filedialog
 from datetime import datetime
 from tkcalendar import DateEntry  # 导入 DateEntry 控件
 from tkinter import ttk  #导入ttk，控制标签页
-from log_manager import save_log, preview_log, fetch_weather, get_selected_city
-from log_manager import save_task_to_db,update_city_entry, update_weather_display 
-from log_manager import format_weather_data, add_task,delete_task,clear_tasks,mark_task_completed
-from log_manager import refresh_task_display,clear_default,load_high_frequency_tasks
-from log_manager import select_task_from_history
+from app.log_manager import save_log, preview_log, fetch_weather, get_selected_city
+from app.log_manager import save_task_to_db,update_city_entry, update_weather_display 
+from app.log_manager import format_weather_data, add_task,delete_task,clear_tasks,mark_task_completed
+from app.log_manager import refresh_task_display,clear_default,load_high_frequency_tasks
+from app.log_manager import select_task_from_history,convert_to_chinese_weekday
 
 from collections import Counter
+# 将项目根目录添加到 sys.path，以便 Python 能找到 app 和 utils
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# 添加 scripts utils 目录到模块搜索路径
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'scripts')))
 # 定义base dir
 base_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -36,14 +35,26 @@ from data.config import font_title_14, font_common_12, bg_button_color, bg_color
 db_path = "data/construction_logs.db"  # 固定数据库路径
 
 
-
-
 #窗口布置区》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》
-# 创建主窗口
-root = tk.Tk()
-root.title("LogBuilder！！ ")
-root.geometry("800x600")
-root.config(bg=bg_color)  # 设置背景颜色-深绿
+import tkinter as tk
+
+def run_gui():
+    """
+    启动 LogBuilder 的 GUI
+    """
+    print("Starting GUI..GUI.")
+    root = tk.Tk()
+    root.title("LogBuilder！！ ")
+    root.geometry("800x600")
+    root.config(bg=bg_color)  # 设置背景颜色为深绿色
+    bg_color = "#006400"  # 深绿色
+    # 可以添加更多的界面组件，如按钮、标签等
+    label = tk.Label(root, text="欢迎使用 LogBuilder", bg=bg_color, fg="white")
+    label.pack(pady=20)
+
+    root.mainloop()
+
+
 
 # 添加一个标签
 label = tk.Label(root, text="欢迎使用施工日志工具乐构者", bg=bg_label_color, fg=fg_color_white, font=("Arial", 16))

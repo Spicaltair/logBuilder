@@ -110,5 +110,4 @@ def initialize_database():
     conn.close()
     print("数据库已成功初始化！")
 
-if __name__ == "__main__":
-    initialize_database()
+
