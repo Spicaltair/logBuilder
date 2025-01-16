@@ -36,19 +36,24 @@ db_path = "data/construction_logs.db"  # 固定数据库路径
 
 
 #窗口布置区》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》》
-import tkinter as tk
+
 
 def run_gui():
     """
     启动 LogBuilder 的 GUI
     """
-    print("Starting GUI..GUI.")
+    import tkinter as tk
+    print("Starting GUI..")
+    
+    bg_color = "#006400"  # 深绿色
+    
+    # 创建主窗口
     root = tk.Tk()
     root.title("LogBuilder！！ ")
     root.geometry("800x600")
     root.config(bg=bg_color)  # 设置背景颜色为深绿色
-    bg_color = "#006400"  # 深绿色
-    # 可以添加更多的界面组件，如按钮、标签等
+    
+    # 添加更多的界面组件，如按钮、标签等
     label = tk.Label(root, text="欢迎使用 LogBuilder", bg=bg_color, fg="white")
     label.pack(pady=20)
 
