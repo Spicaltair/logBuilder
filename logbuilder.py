@@ -1,27 +1,33 @@
 import os
 import sys
+import tkinter as tk
 
+# 打印当前工作目录和模块搜索路径
+print(f"Current working directory: {os.getcwd()}")
+print(f"Module search path: {sys.path}")
 
-print("Script is running...")
-print(sys.path)
 try:
-    # 确保路径添加正确
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    print(f"Current working directory: {os.getcwd()}")
-    sys.path.append(os.getcwd())  # 确保当前目录在模块搜索路径中
-    print(f"Module search path: {sys.path}")
-    print("Checking if 'app/main.py' exists:", os.path.exists("app/main.py"))
-    print("Checking if 'app/gui.py' exists:", os.path.exists("app/gui.py"))
+    # 创建 Tkinter 主窗口（仅用于测试）
+    root = tk.Tk()
+    root.withdraw()  # 隐藏窗口，避免阻塞运行
 
-    print("Paths appended:", sys.path)
-
-    # 导入模块
+    # 尝试导入模块
+    print("Attempting to import modules...")
     from app.main import run_main_app
     from app.gui import run_gui
-    from scripts.init_db import initialize_database
-
+    from scripts.init_db import init_database
 
     print("Modules imported successfully.")
+except ModuleNotFoundError as e:
+    print(f"ModuleNotFoundError occurred: {e}")
+except ImportError as e:
+    print(f"ImportError occurred: {e}")
+except Exception as e:
+    print(f"Other error occurred: {e}")
+finally:
+    if 'root' in locals():
+        root.destroy()  # 确保窗口被销毁
+
 
     if __name__ == "__main__":
         print("Inside main block...")
@@ -32,12 +38,9 @@ try:
 
         # 数据库初始化
         print("Initializing database...")
-        initialize_database()
+        init_database()
 
         # GUI 启动
         print("Starting GUI...")
         run_gui()
-except ImportError as e:
-    print(f"ImportError occurred: {e}")
-except Exception as e:
-    print(f"Other error occurred: {e}")
+

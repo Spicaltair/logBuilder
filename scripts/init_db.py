@@ -10,10 +10,11 @@ db_path = os.path.join(base_dir, 'data', 'construction_logs.db')
 # 确保 data 目录存在
 os.makedirs(os.path.dirname(db_path), exist_ok=True)
 
-def initialize_database():
+def init_database():
     """
     初始化 SQLite 数据库，创建必要的表
     """
+    print("Database initialized.")
     conn = sqlite3.connect(db_path)
     conn.execute("PRAGMA foreign_keys = ON")  # 启用外键约束
     cursor = conn.cursor()
