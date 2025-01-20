@@ -22,7 +22,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 base_dir = os.path.dirname(os.path.abspath(__file__))
 
 from utils.log_creator import create_log_file
-from scripts.get_location import get_city
+from utils.get_location import get_city
 
 from utils.api_utils import get_dynamic_city_list, get_weather, get_location_data
 
